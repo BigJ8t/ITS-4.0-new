@@ -2,6 +2,7 @@ import './style.css';
 import { createHotelScene } from './scene.js';
 import { scenarioCatalog, getScenario } from './scenario-library.js';
 import { messages, languageCodes } from './i18n.js';
+import { getDialogue } from './dialogues.js';
 
 const $ = id => document.getElementById(id);
 const safeStore = {
@@ -112,6 +113,11 @@ const hints=document.createElement('div');hints.className='hint-card';hints.id='
 const hintButton=document.createElement('button');hintButton.type='button';hintButton.id='hintBtn';hintButton.className='tool-btn hint-button';
 $('decisionArea').insertBefore(hintButton,$('choices'));
 $('decisionArea').insertBefore(hints,$('choices'));
+const dialogueSection=document.createElement('section');
+dialogueSection.className='dialogue-transcript';
+dialogueSection.setAttribute('aria-label','Dialogue after decision');
+dialogueSection.innerHTML='<h3 id="dialogueHeading"></h3><div id="dialogueLines" class="dialogue-lines" aria-live="polite"></div><button type="button" id="dialogueVoiceBtn" class="tool-btn"></button>';
+$('resultArea').prepend(dialogueSection);
 const feedbackNarrate=document.createElement('button');feedbackNarrate.type='button';feedbackNarrate.className='tool-btn';feedbackNarrate.id='feedbackVoiceBtn';
 $('resultArea').append(feedbackNarrate);
 const notice=document.createElement('p');notice.className='udl-note';notice.id='udlNote';
@@ -211,12 +217,36 @@ function translate(){
   [m.beginner,m.standard,m.advanced].forEach((x,i)=>opts[i].textContent=x);
   $('hintBtn').textContent='? '+m.help;
   $('feedbackVoiceBtn').textContent='▶ '+m.readFeedback;
+  const dialogueText=({
+    it:['Dialogo simulato','▶ Ascolta il dialogo'],
+    en:['Simulated conversation','▶ Play dialogue'],
+    es:['Diálogo simulado','▶ Escuchar diálogo'],
+    fr:['Dialogue simulé','▶ Écouter le dialogue']
+  })[language];
+  $('dialogueHeading').textContent=dialogueText[0];
+  $('dialogueVoiceBtn').textContent=dialogueText[1];
   $('udlNote').textContent=m.effects+' '+m.notice;
   $('trialCounter').textContent=m.attempts+': '+caseAttempts;
   renderChoices();showHint();if(lastResult)renderResult(lastResult);
 }
+function renderDialogue(result){
+  const lines=getDialogue(activeScenario.id,result.id,language);
+  const target=$('dialogueLines');
+  target.replaceChildren();
+  lines.forEach(line=>{
+    const paragraph=document.createElement('p');
+    paragraph.className='dialogue-bubble dialogue-'+line.speaker;
+    const role=document.createElement('strong');
+    role.textContent=line.role;
+    const value=document.createElement('span');
+    value.textContent=line.text;
+    paragraph.append(role,value);
+    target.append(paragraph);
+  });
+}
 function renderResult(result){
   lastResult=result;const d=optionText(result.id),m=t();
+  renderDialogue(result);
   $('resultTag').textContent=d[1];$('resultTitle').textContent=d[2];
   $('resultBody').textContent=d[3];$('coachText').textContent=d[4];
   $('metrics').replaceChildren();
@@ -243,12 +273,18 @@ $('levelSelect').addEventListener('change',()=>showHint());
 $('hintBtn').addEventListener('click',()=>showHint(true));
 $('narrateBtn').addEventListener('click',()=>speak([caseText()?.title||t().title,caseText()?.intro||(settings.simple?t().introSimple:t().intro),caseText()?.problem||(settings.simple?t().problemSimple:t().problem),t().question,...currentChoices().map(c=>optionText(c.id)[0])].join('. ')));
 $('feedbackVoiceBtn').addEventListener('click',()=>{if(lastResult){const d=optionText(lastResult.id);speak([d[2],d[3],d[4]].join('. '))}});
+$('dialogueVoiceBtn').addEventListener('click',()=>{
+  if(!lastResult)return;
+  const lines=getDialogue(activeScenario.id,lastResult.id,language);
+  speak(lines.map(x=>x.role+'. '+x.text).join('. '));
+});
 $('stopNarrateBtn').addEventListener('click',stopSpeech);
 $('confirmBtn').addEventListener('click',()=>{
   const result=currentChoices().find(c=>c.id===chosen);if(!result)return;
   attempts++;caseAttempts++;
   safeStore.set('itsphere-attempts',attempts);
   safeStore.set('itsphere-count-'+activeScenario.id,caseAttempts);
+  stopSpeech();
   hotel.reactToChoice?.(result.id);
   renderResult(result);$('decisionArea').classList.add('hidden');$('resultArea').classList.remove('hidden');
   $('trialCounter').textContent=t().attempts+': '+caseAttempts;
