@@ -101,3 +101,18 @@ button:focus-visible,a:focus-visible{outline:3px solid #47dfeb;outline-offset:3p
 .high-contrast .scenario-switch{background:#000;border-color:#fff;}
 .high-contrast .scenario-switch select{background:#000;border-color:#fff;color:#fff;}
 .large-text .scenario-switch label,.large-text .scenario-switch select{font-size:16px;}
+
+
+/* Each decision unfolds into an accessible, localized conversation. */
+.dialogue-transcript{border:1px solid #477a8f;border-radius:12px;background:#102f40;margin-top:16px;padding:13px}
+.dialogue-transcript h3{margin:0 0 13px;color:#a9eaf0;font-size:14px;font-weight:750}
+.dialogue-lines{display:flex;flex-direction:column;gap:11px}
+.dialogue-bubble{display:flex;flex-direction:column;gap:5px;margin:0!important;padding:12px 13px;border-radius:10px;line-height:1.6}
+.dialogue-bubble strong{font-size:11px;letter-spacing:.025em}
+.dialogue-bubble span{font-size:13px;line-height:1.55}
+.dialogue-staff{background:#235569;border-left:3px solid #6ad7e6;align-self:flex-start;max-width:97%}
+.dialogue-guest{background:#3b3740;border-right:3px solid #d8b78c;align-self:flex-end;max-width:93%}
+.dialogue-transcript .tool-btn{width:100%;margin-top:13px;text-align:center}
+.high-contrast .dialogue-transcript,.high-contrast .dialogue-bubble{background:#000!important;border:2px solid #fff!important;color:#fff!important}
+.large-text .dialogue-bubble span{font-size:17px}
+@media(max-width:850px){.dialogue-bubble,.dialogue-staff,.dialogue-guest{max-width:100%}}
