@@ -1,6 +1,6 @@
 import './style.css';
 import { createHotelScene } from './scene.js';
-import { scenario } from './scenario.js';
+import { scenarioCatalog, getScenario } from './scenario-library.js';
 import { messages, languageCodes } from './i18n.js';
 
 const $ = id => document.getElementById(id);
@@ -11,6 +11,9 @@ const safeStore = {
 let language = ['it','en','es','fr'].includes(safeStore.get('itsphere-language','it')) ? safeStore.get('itsphere-language','it') : 'it';
 let attempts = Math.max(0,Number(safeStore.get('itsphere-attempts','0')) || 0);
 let chosen = null;
+let activeScenario=getScenario(safeStore.get('itsphere-scenario','vip'));
+const scenarioAttempts=()=>Math.max(0,Number(safeStore.get('itsphere-count-'+activeScenario.id,'0'))||0);
+let caseAttempts=scenarioAttempts();
 let lastResult = null;
 let settings = { large:false, contrast:false, motion:false, simple:false, guided:true };
 let spoken = false;
@@ -58,6 +61,50 @@ tools.innerHTML = `
   <p id="transcriptNotice" class="sr-caption"></p>
 `;
 document.querySelector('.scenario-panel').prepend(tools);
+// Scenario browser: each case has its own context, choices and feedback.
+const casePanel=document.createElement('div');
+casePanel.className='scenario-switch';
+casePanel.innerHTML='<label for="scenarioSelect" id="scenarioLabel"></label><select id="scenarioSelect"></select><p id="caseSource"></p>';
+document.querySelector('.scenario-panel').insertBefore(casePanel,document.querySelector('.scenario-panel .panel-top'));
+const caseNames={it:'Scegli uno scenario',en:'Choose a scenario',es:'Elige un escenario',fr:'Choisissez un scénario'};
+const caseOrigins={
+  it:['Dalle slide ITSphere','Ampliamento progettuale'],
+  en:['From ITSphere slides','New design extension'],
+  es:['De las diapositivas ITSphere','Ampliación del proyecto'],
+  fr:['Issu des diapositives ITSphere','Extension du projet']
+};
+const caseLabel=(c)=>{
+  if(c.id==='vip') return messages[language].title;
+  return c.locales[language].title;
+};
+const caseText=()=>activeScenario.id==='vip'?null:activeScenario.locales[language];
+const currentChoices=()=>activeScenario.choices;
+function resetCase(){
+  stopSpeech();chosen=null;lastResult=null;caseAttempts=scenarioAttempts();
+  $('confirmBtn').disabled=true;
+  $('decisionArea').classList.remove('hidden');
+  $('resultArea').classList.add('hidden');
+  hotel.setView?.('overview');
+  translate();
+}
+function drawCaseSelector(){
+  $('scenarioLabel').textContent=caseNames[language];
+  const selected=activeScenario.id;
+  $('scenarioSelect').replaceChildren();
+  for(const c of scenarioCatalog){
+    const o=document.createElement('option');o.value=c.id;
+    o.textContent=String(c.index).padStart(2,'0')+' · '+caseLabel(c);
+    $('scenarioSelect').append(o);
+  }
+  $('scenarioSelect').value=selected;
+  const source=activeScenario.origin==='slides'?0:1;
+  $('caseSource').textContent=caseOrigins[language][source]+' · '+activeScenario.role;
+}
+$('scenarioSelect').addEventListener('change',e=>{
+  activeScenario=getScenario(e.target.value);
+  safeStore.set('itsphere-scenario',activeScenario.id);
+  resetCase();
+});
 const modeBox=document.createElement('div');modeBox.className='learning-level';
 modeBox.innerHTML='<label for="levelSelect" id="levelLabel"></label> <select id="levelSelect"><option value="guided"></option><option value="independent"></option><option value="advanced"></option></select>';
 $('decisionArea').prepend(modeBox);
@@ -83,11 +130,18 @@ function speak(text) {
   window.speechSynthesis.speak(utterance);
 }
 function stopSpeech(){if('speechSynthesis' in window)window.speechSynthesis.cancel()}
-function optionText(id) { const m=t();return m[id==='upgrade'?'upgrade':id==='alternative'?'alternativeChoice':'negotiate']; }
+function optionText(id) {
+  if(activeScenario.id!=='vip'){
+    const item=caseText()?.choices.find(x=>x.id===id);
+    return item?[item.label,item.tag,item.title,item.body,item.coach]:['','','','',''];
+  }
+  const m=t();
+  return m[id==='upgrade'?'upgrade':id==='alternative'?'alternativeChoice':'negotiate'];
+}
 function renderChoices(){
   const current=document.activeElement?.dataset?.choiceId || null;
   $('choices').replaceChildren();
-  scenario.choices.forEach((option,index)=>{
+  currentChoices().forEach((option,index)=>{
     const btn=document.createElement('button');btn.type='button';
     btn.className='choice'+(chosen===option.id?' selected':'');
     btn.dataset.choiceId=option.id;btn.setAttribute('aria-pressed',String(chosen===option.id));
@@ -103,9 +157,10 @@ function renderChoices(){
 }
 function hintText() {
   const m=t();const level=$('levelSelect').value;
-  if (level==='advanced') return attempts>0?m.nextHint:'';
-  if(level==='guided')return attempts>=1?m.stepHint:m.helper;
-  return attempts>=1?m.nextHint:'';
+  const base=caseText()?.hint||m.helper;
+  if (level==='advanced') return caseAttempts>0?base:'';
+  if(level==='guided')return base;
+  return caseAttempts>=1?base:'';
 }
 function showHint(force=false){
   const text=hintText() || (force ? t().helper : '');
@@ -137,11 +192,13 @@ function translate(){
   $('largeLabel').textContent=m.large;$('contrastLabel').textContent=m.contrast;
   $('motionLabel').textContent=m.motion;$('simpleLabel').textContent=m.simple;
   $('transcriptNotice').textContent=m.captions+' · '+m.alternative;
-  document.querySelector('.eyebrow').textContent=m.scenario;
-  document.querySelector('.mini-pill').textContent=m.role;
-  document.querySelector('.scenario-panel h1').textContent=m.title;
-  document.querySelector('.intro').textContent=settings.simple?m.introSimple:m.intro;
-  document.querySelector('.problem-box span:last-child').textContent=settings.simple?m.problemSimple:m.problem;
+  drawCaseSelector();
+  const caseContent=caseText();
+  document.querySelector('.eyebrow').textContent=(m.scenario.replace(/\\d+/,'').trim()+' '+String(activeScenario.index).padStart(2,'0'));
+  document.querySelector('.mini-pill').textContent=activeScenario.role;
+  document.querySelector('.scenario-panel h1').textContent=caseContent?.title||m.title;
+  document.querySelector('.intro').textContent=caseContent?.intro||(settings.simple?m.introSimple:m.intro);
+  document.querySelector('.problem-box span:last-child').textContent=caseContent?.problem||(settings.simple?m.problemSimple:m.problem);
   document.querySelector('.question').textContent=m.question;
   $('confirmBtn').textContent=m.confirm;
   $('retryBtn').textContent=m.retry;
@@ -154,7 +211,7 @@ function translate(){
   $('hintBtn').textContent='? '+m.help;
   $('feedbackVoiceBtn').textContent='▶ '+m.readFeedback;
   $('udlNote').textContent=m.effects+' '+m.notice;
-  $('trialCounter').textContent=m.attempts+': '+attempts;
+  $('trialCounter').textContent=m.attempts+': '+caseAttempts;
   renderChoices();showHint();if(lastResult)renderResult(lastResult);
 }
 function renderResult(result){
@@ -183,15 +240,17 @@ for(const [id,key] of [['largeText','large'],['highContrast','contrast'],['reduc
 $('languageSelect').addEventListener('change',e=>{stopSpeech();language=e.target.value;safeStore.set('itsphere-language',language);translate()});
 $('levelSelect').addEventListener('change',()=>showHint());
 $('hintBtn').addEventListener('click',()=>showHint(true));
-$('narrateBtn').addEventListener('click',()=>speak([t().title,settings.simple?t().introSimple:t().intro,settings.simple?t().problemSimple:t().problem,t().question,...scenario.choices.map(c=>optionText(c.id)[0])].join('. ')));
+$('narrateBtn').addEventListener('click',()=>speak([caseText()?.title||t().title,caseText()?.intro||(settings.simple?t().introSimple:t().intro),caseText()?.problem||(settings.simple?t().problemSimple:t().problem),t().question,...currentChoices().map(c=>optionText(c.id)[0])].join('. ')));
 $('feedbackVoiceBtn').addEventListener('click',()=>{if(lastResult){const d=optionText(lastResult.id);speak([d[2],d[3],d[4]].join('. '))}});
 $('stopNarrateBtn').addEventListener('click',stopSpeech);
 $('confirmBtn').addEventListener('click',()=>{
-  const result=scenario.choices.find(c=>c.id===chosen);if(!result)return;
-  attempts++;safeStore.set('itsphere-attempts',attempts);
+  const result=currentChoices().find(c=>c.id===chosen);if(!result)return;
+  attempts++;caseAttempts++;
+  safeStore.set('itsphere-attempts',attempts);
+  safeStore.set('itsphere-count-'+activeScenario.id,caseAttempts);
   hotel.reactToChoice?.(result.id);
   renderResult(result);$('decisionArea').classList.add('hidden');$('resultArea').classList.remove('hidden');
-  $('trialCounter').textContent=t().attempts+': '+attempts;
+  $('trialCounter').textContent=t().attempts+': '+caseAttempts;
   $('resultTitle').setAttribute('tabindex','-1');$('resultTitle').focus();
 });
 $('retryBtn').addEventListener('click',()=>{
