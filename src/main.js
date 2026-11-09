@@ -3,6 +3,7 @@ import { createHotelScene } from './scene.js';
 import { scenarioCatalog, getScenario } from './scenario-library.js';
 import { messages, languageCodes } from './i18n.js';
 import { getDialogue } from './dialogues.js';
+import { createNarrator } from './narration.js';
 
 const $ = id => document.getElementById(id);
 const safeStore = {
@@ -124,18 +125,44 @@ const notice=document.createElement('p');notice.className='udl-note';notice.id='
 document.querySelector('.scenario-panel').append(notice);
 let focusedButtonId=null;
 
-function speak(text) {
-  if (!('speechSynthesis' in window)) { $('udlNote').textContent=t().voiceUnsupported; return; }
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(text);
-  utterance.lang=languageCodes[language];utterance.rate=.93;utterance.pitch=1.02;
-  const voices=window.speechSynthesis.getVoices();
-  const voice=voices.find(v=>v.lang.toLowerCase()===utterance.lang.toLowerCase()) ||
-    voices.find(v=>v.lang.toLowerCase().startsWith(language));
-  if(voice)utterance.voice=voice;
-  window.speechSynthesis.speak(utterance);
+const voiceControls=document.createElement('div');
+voiceControls.className='voice-controls';
+voiceControls.innerHTML='<label for="narratorVoice" id="voiceLabel"></label><select id="narratorVoice"></select><label for="narratorPace" id="paceLabel"></label><select id="narratorPace"><option value="slow"></option><option value="normal"></option><option value="fast"></option></select>';
+$('accessOptions').append(voiceControls);
+const narrator=createNarrator({getLanguage:()=>language,onUnavailable:()=>{$('udlNote').textContent=t().voiceUnsupported}});
+$('narratorPace').value=['slow','normal','fast'].includes(safeStore.get('itsphere-voice-pace','normal'))?safeStore.get('itsphere-voice-pace','normal'):'normal';
+narrator.setPace($('narratorPace').value);
+function populateVoices(){
+  const labels=narrator.labels[language];
+  $('voiceLabel').textContent=labels.voice;
+  $('paceLabel').textContent=labels.speed;
+  const paceLabels=[labels.slow,labels.normal,labels.fast];
+  [...$('narratorPace').options].forEach((option,index)=>option.textContent=paceLabels[index]);
+  const voiceSelect=$('narratorVoice');
+  const stored=safeStore.get('itsphere-voice-'+language,'auto');
+  voiceSelect.replaceChildren();
+  const auto=document.createElement('option');auto.value='auto';auto.textContent=labels.auto;voiceSelect.append(auto);
+  for(const voice of narrator.voices(language)){
+    const option=document.createElement('option');option.value=voice.voiceURI;
+    option.textContent=voice.name+(voice.localService?' · offline':'');
+    voiceSelect.append(option);
+  }
+  voiceSelect.value=[...voiceSelect.options].some(x=>x.value===stored)?stored:'auto';
+  narrator.setVoice(voiceSelect.value);
 }
-function stopSpeech(){if('speechSynthesis' in window)window.speechSynthesis.cancel()}
+$('narratorVoice').addEventListener('change',e=>{
+  narrator.setVoice(e.target.value);
+  safeStore.set('itsphere-voice-'+language,e.target.value);
+});
+$('narratorPace').addEventListener('change',e=>{
+  narrator.setPace(e.target.value);
+  safeStore.set('itsphere-voice-pace',e.target.value);
+});
+if('speechSynthesis' in window){
+  window.speechSynthesis.addEventListener?.('voiceschanged',populateVoices);
+}
+function speak(text){narrator.speak(text)}
+function stopSpeech(){narrator.stop()}
 function optionText(id) {
   if(activeScenario.id!=='vip'){
     const item=caseText()?.choices.find(x=>x.id===id);
@@ -184,6 +211,7 @@ function translate(){
   $('wardrobeLabel').textContent=labels[0];
   [...$('wardrobeSelect').options].forEach((option,i)=>option.textContent=labels[i+1]);
   $('languageSelect').value=language;
+  populateVoices();
   cameraBar.setAttribute('aria-label',({it:'Inquadrature',en:'Camera views',es:'Vistas de cámara',fr:'Vues de caméra'})[language]);
   const cameras=({it:['Panoramica','Ospite','Reception'],en:['Overview','Guest','Front desk'],es:['Vista general','Huésped','Recepción'],fr:['Vue générale','Client','Réception']})[language];
   cameraBar.querySelectorAll('button').forEach((btn,i)=>btn.textContent=['◈ ','◉ ','⌂ '][i]+cameras[i]);
@@ -271,12 +299,12 @@ for(const [id,key] of [['largeText','large'],['highContrast','contrast'],['reduc
 $('languageSelect').addEventListener('change',e=>{stopSpeech();language=e.target.value;safeStore.set('itsphere-language',language);translate()});
 $('levelSelect').addEventListener('change',()=>showHint());
 $('hintBtn').addEventListener('click',()=>showHint(true));
-$('narrateBtn').addEventListener('click',()=>speak([caseText()?.title||t().title,caseText()?.intro||(settings.simple?t().introSimple:t().intro),caseText()?.problem||(settings.simple?t().problemSimple:t().problem),t().question,...currentChoices().map(c=>optionText(c.id)[0])].join('. ')));
-$('feedbackVoiceBtn').addEventListener('click',()=>{if(lastResult){const d=optionText(lastResult.id);speak([d[2],d[3],d[4]].join('. '))}});
+$('narrateBtn').addEventListener('click',()=>speak([caseText()?.title||t().title,caseText()?.intro||(settings.simple?t().introSimple:t().intro),caseText()?.problem||(settings.simple?t().problemSimple:t().problem),t().question,...currentChoices().map(c=>optionText(c.id)[0])]));
+$('feedbackVoiceBtn').addEventListener('click',()=>{if(lastResult){const d=optionText(lastResult.id);speak([d[2],d[3],d[4]])}});
 $('dialogueVoiceBtn').addEventListener('click',()=>{
   if(!lastResult)return;
   const lines=getDialogue(activeScenario.id,lastResult.id,language);
-  speak(lines.map(x=>x.role+'. '+x.text).join('. '));
+  speak(lines.map(x=>x.role+'. '+x.text));
 });
 $('stopNarrateBtn').addEventListener('click',stopSpeech);
 $('confirmBtn').addEventListener('click',()=>{
