@@ -1,6 +1,7 @@
 // Interface language, accessible narration and scenario content.
 export const messages = {
   it: {
+    helpTitle:'Esplora Spazio Origine',helpBody:'Usa WASD o le frecce per muoverti nella lobby. Trascina per ruotare, usa la rotella per lo zoom. Puoi svolgere tutta la simulazione dal pannello testuale.',helpFoot:'Prototipo con decisioni basate su regole. AI generativa e Open Data non sono ancora integrati.',start:'Inizia la simulazione',header3d:'Simulazione 3D',
     language:'Lingua',voice:'Ascolta lo scenario',stop:'Ferma voce',captions:'Trascrizione disponibile',
     accessibility:'Accessibilità',large:'Testo grande',contrast:'Alto contrasto',motion:'Riduci animazioni',
     simple:'Linguaggio semplificato',help:'Aiuto / suggerimento',hints:'Supporti adattivi',
@@ -24,6 +25,7 @@ export const messages = {
     metricNames:['Soddisfazione ospite','Impatto sui costi','Efficienza operativa'],points:'punti'
   },
   en: {
+    helpTitle:'Explore Spazio Origine',helpBody:'Use WASD or arrow keys to explore the lobby. Drag to rotate and scroll to zoom. You can complete the simulation using the text panel alone.',helpFoot:'Rule-based prototype. Generative AI and Open Data are not yet integrated.',start:'Start simulation',header3d:'3D simulation',
     language:'Language',voice:'Listen to scenario',stop:'Stop voice',captions:'Transcript available',
     accessibility:'Accessibility',large:'Large text',contrast:'High contrast',motion:'Reduce motion',
     simple:'Plain language',help:'Help / hint',hints:'Adaptive support',
@@ -47,6 +49,7 @@ export const messages = {
     metricNames:['Guest satisfaction','Cost impact','Operational efficiency'],points:'pts'
   },
   es: {
+    helpTitle:'Explora Spazio Origine',helpBody:'Usa WASD o las flechas para recorrer el vestíbulo. Arrastra para girar y desplaza la rueda para acercar. Puedes completar la simulación desde el panel de texto.',helpFoot:'Prototipo basado en reglas. La IA generativa y los datos abiertos aún no están integrados.',start:'Iniciar simulación',header3d:'Simulación 3D',
     language:'Idioma',voice:'Escuchar escenario',stop:'Detener voz',captions:'Transcripción disponible',
     accessibility:'Accesibilidad',large:'Texto grande',contrast:'Alto contraste',motion:'Reducir movimiento',
     simple:'Lenguaje sencillo',help:'Ayuda / pista',hints:'Apoyo adaptativo',
