@@ -7,10 +7,10 @@ import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 const people = [
   {role:'staff',position:[2.0,0,-6.72],rotation:0,gender:'female',heightMeters:1.68,
     clothes:['shirt','jacket','skirt','shoes','hair_ponytail01'],
-    colors:{shirt:'#f2f2f0',jacket:'#1e314c',skirt:'#1e314c',shoes:'#28282d',hair_ponytail01:'#30221c'}},
+    colors:{shirt:'#f3efe7',jacket:'#172c41',skirt:'#172c41',shoes:'#262626',hair_ponytail01:'#372820'}},
   {role:'guest',position:[2.35,0,-3.60],rotation:Math.PI,gender:'male',heightMeters:1.82,
     clothes:['shirt','jacket','jeans','shoes','hair_short04'],
-    colors:{shirt:'#f0eee9',jacket:'#5a4d43',jeans:'#30333b',shoes:'#382821',hair_short04:'#28211c'}}
+    colors:{shirt:'#f5f1e9',jacket:'#433b37',jeans:'#262f39',shoes:'#2a2320',hair_short04:'#33291f'}}
 ];
 const basePath=import.meta.env.BASE_URL+'models/humans/';
 function allMeshes(root){const output=[];root.traverse(o=>{if(o.isSkinnedMesh)output.push(o)});return output}
@@ -60,22 +60,91 @@ function hideCoveredBody(mesh,role){
   }
   if(filtered.length>0)g.setIndex(filtered);
 }
-function toneClothing(root,color){
+// Modern hospitality wardrobe: each role has its own coherent business palette.
+// The fabric textures affect surface response, never anatomical proportions.
+const wardrobes = {
+  signature: {
+    staff:{shirt:'#f3efe7',jacket:'#172c41',skirt:'#172c41',shoes:'#262626',hair_ponytail01:'#372820'},
+    guest:{shirt:'#f5f1e9',jacket:'#433b37',jeans:'#262f39',shoes:'#2a2320',hair_short04:'#33291f'}
+  },
+  heritage: {
+    staff:{shirt:'#fff4e5',jacket:'#766147',skirt:'#5b4b3e',shoes:'#2e271f',hair_ponytail01:'#3a281f'},
+    guest:{shirt:'#fbf2e8',jacket:'#293e43',jeans:'#3d3c3a',shoes:'#332820',hair_short04:'#2c251e'}
+  }
+};
+const fabricTextures=new Map();
+function fabricBump(style){
+  if(fabricTextures.has(style))return fabricTextures.get(style);
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=128;
+  const ctx=canvas.getContext('2d');
+  const image=ctx.createImageData(128,128);
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++){
+    // Deterministic fine textile weave, neutral bump (not a fabric color overlay).
+    const weave=style==='shirt' ? (Math.sin(x*.8)+Math.cos(y*1.1))*1.6
+      : (Math.sin(x*1.5)+Math.cos(y*1.7))*3.5;
+    const n=Math.max(0,Math.min(255,128+weave));
+    const off=(y*128+x)*4;
+    image.data[off]=n;image.data[off+1]=n;image.data[off+2]=n;image.data[off+3]=255;
+  }
+  ctx.putImageData(image,0,0);
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+  texture.repeat.set(5,5);
+  fabricTextures.set(style,texture);
+  return texture;
+}
+function dressMaterial(source,part,color){
+  const m=source.clone();
+  m.color.set(color);
+  if(part.startsWith('hair_')){
+    m.metalness=0;m.roughness=.84;
+  } else if(part==='shoes'){
+    m.metalness=.03;m.roughness=.49;
+  } else {
+    m.metalness=0;
+    m.roughness=part==='shirt'?.77:.91;
+    m.bumpMap=fabricBump(part==='shirt'?'shirt':'suit');
+    m.bumpScale=part==='shirt'?.009:.018;
+  }
+  m.envMapIntensity=.42;
+  m.needsUpdate=true;
+  return m;
+}
+function toneClothing(root,color,item){
   root.traverse(obj=>{
     if(!obj.isMesh)return;
-    const mats=Array.isArray(obj.material)?obj.material:[obj.material];
-    const updated=mats.map(m=>{
-      const copy=m.clone();
-      if(copy.color)copy.color.set(color);
-      copy.metalness=Math.min(copy.metalness??0,.12);copy.roughness=.82;
-      return copy;
-    });
-    obj.material=Array.isArray(obj.material)?updated:updated[0];
+    obj.material=Array.isArray(obj.material)
+      ?obj.material.map(m=>dressMaterial(m,item,color))
+      :dressMaterial(obj.material,item,color);
     obj.castShadow=true;obj.receiveShadow=true;obj.frustumCulled=false;
   });
 }
+function prepareBodyMaterials(main,gender){
+  // Clone face/skin materials per character: changes must never leak to the
+  // other actor through shared GLTF material references.
+  main.traverse(o=>{
+    if(!o.isMesh)return;
+    const materials=Array.isArray(o.material)?o.material:[o.material];
+    const copies=materials.map(m=>{
+      const c=m.clone();
+      const role=(m.name||'').toLowerCase();
+      if(role.includes('skin')){
+        c.roughness=.78;
+        c.metalness=0;
+        c.color.set(gender==='female'?'#eac4ab':'#dcb296');
+      }else if(role.includes('iris')){
+        c.roughness=.21;c.color.set(gender==='female'?'#635947':'#5d6c63');
+      }else if(role.includes('cornea')){
+        c.roughness=.11;c.metalness=0;
+      }
+      return c;
+    });
+    o.material=Array.isArray(o.material)?copies:copies[0];
+  });
+}
 export function installHumanCharacters(scene,isDisposed=()=>false){
-  const state={mixers:[],roots:[],status:'loading',motion:true};
+  const state={mixers:[],roots:[],wardrobeParts:[],status:'loading',motion:true,style:'signature'};
   const loader=new GLTFLoader();
   const needed=['base_body_anim',...new Set(people.flatMap(p=>p.clothes.map(c=>c.startsWith('hair_')?c:'clothing_'+c)))];
   const templates={};
@@ -92,6 +161,7 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
       // remove visible anatomy on the other.
       body.geometry = body.geometry.clone();
       genderMorph(main,spec.gender);
+      prepareBodyMaterials(main,spec.gender);
       hideCoveredBody(body,spec.role);
       for(const item of spec.clothes){
         const file=item.startsWith('hair_')?item:'clothing_'+item;
@@ -104,7 +174,8 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
           if(!bindPart(mesh,body))continue;
           body.parent.add(mesh);
           genderMorph(mesh,spec.gender);
-          toneClothing(mesh,spec.colors[item]);
+          toneClothing(mesh,wardrobes[state.style][spec.role][item],item);
+          state.wardrobeParts.push({mesh,role:spec.role,item});
         }
       }
       main.updateMatrixWorld(true);
@@ -155,6 +226,16 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
     update(dt){if(state.motion)state.mixers.forEach(m=>m.update(dt))},
     setReducedMotion(v){state.motion=!v},
     getStatus(){return state.status},
+    setStyle(style){
+      if(!Object.prototype.hasOwnProperty.call(wardrobes,style))return;
+      state.style=style;
+      for(const part of state.wardrobeParts) {
+        const color=wardrobes[style][part.role][part.item];
+        if(!color)continue;
+        const mats=Array.isArray(part.mesh.material)?part.mesh.material:[part.mesh.material];
+        for(const mat of mats)mat.color.set(color);
+      }
+    },
     dispose(){state.mixers.forEach(m=>m.stopAllAction());state.roots.forEach(r=>r.removeFromParent())}
   };
 }
