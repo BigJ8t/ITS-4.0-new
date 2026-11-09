@@ -238,6 +238,35 @@ export function createHotelScene(container) {
   softFill.position.set(5,5,-3);scene.add(softFill);
   const rearFill=new THREE.PointLight(0xe4eecf,21,11);
   rearFill.position.set(8,5,-7.5);scene.add(rearFill);
+  // Directed camera views for a more cinematic, yet accessible, experience.
+  const viewPresets={
+    overview:{position:[8.2,2.9,7.1],target:[.35,1.65,-5.25]},
+    guest:{position:[4.8,2.18,-.5],target:[2.35,1.44,-3.60]},
+    reception:{position:[-1.8,2.34,-1.9],target:[2.0,1.46,-6.72]}
+  };
+  let cameraJourney=null;
+  let pulse=null;
+  function setView(name,{instant=false}={}){
+    const preset=viewPresets[name]||viewPresets.overview;
+    const destination=new THREE.Vector3(...preset.position),lookAt=new THREE.Vector3(...preset.target);
+    if(instant || manualReducedMotion || motionPref?.matches){
+      camera.position.copy(destination);controls.target.copy(lookAt);controls.update();
+      cameraJourney=null;
+    }else{
+      cameraJourney={startPos:camera.position.clone(),startTarget:controls.target.clone(),
+        endPos:destination,endTarget:lookAt,elapsed:0,duration:1.25};
+    }
+  }
+  function reactToChoice(choice){
+    if(choice==='alternative')setView('reception');
+    else if(choice==='negotiate')setView('guest');
+    else setView('overview');
+    pulse={time:0,color:choice==='alternative'?'#80ecd4':choice==='negotiate'?'#ffe2ad':'#9de0f1'};
+  }
+  // Small, non-flashing status lamp, synchronized to the chosen decision.
+  const signal=new THREE.PointLight('#d7e9df',0,3);
+  signal.position.set(3.2,1.45,-5.5);scene.add(signal);
+
   const held=new Set();const keys=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
   function down(e){if(['INPUT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName))return;
     const k=e.key.toLowerCase();if(keys.includes(k)){held.add(k);if(k.startsWith('arrow'))e.preventDefault();}}
@@ -262,7 +291,22 @@ export function createHotelScene(container) {
       const dest=controls.target.clone().add(move);
       if(Math.abs(dest.x)<8.5&&dest.z>-8&&dest.z<9){controls.target.add(move);camera.position.add(move);}
     }
-    humans.update((manualReducedMotion||motionPref?.matches)?0:dt);
+    const reduced=manualReducedMotion||motionPref?.matches;
+    humans.update(reduced?0:dt);
+    if(cameraJourney){
+      cameraJourney.elapsed+=dt;
+      const t=Math.min(1,cameraJourney.elapsed/cameraJourney.duration);
+      const smooth=t*t*(3-2*t);
+      camera.position.lerpVectors(cameraJourney.startPos,cameraJourney.endPos,smooth);
+      controls.target.lerpVectors(cameraJourney.startTarget,cameraJourney.endTarget,smooth);
+      if(t>=1)cameraJourney=null;
+    }
+    if(pulse){
+      pulse.time+=dt;
+      signal.color.set(pulse.color);
+      signal.intensity=reduced?0:Math.max(0,2.0*(1-pulse.time/2.2));
+      if(pulse.time>2.2){pulse=null;signal.intensity=0;}
+    }
     controls.update();renderer.render(scene,camera);raf=requestAnimationFrame(animate);
   }
   const resize=()=>{
@@ -270,5 +314,5 @@ export function createHotelScene(container) {
     camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();raf=requestAnimationFrame(animate);
-  return {setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v)},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
+  return {setView,reactToChoice,setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v);if(v)signal.intensity=0},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
 }
