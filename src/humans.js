@@ -5,12 +5,12 @@ import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 // Source asset licence: CC0 MakeHuman-based models, see README and licenses.
 // Characters are styled for the hotel context; not scans of real employees/guests.
 const people = [
-  {role:'staff',position:[1.7,0,-7.05],rotation:0,gender:'female',heightMeters:1.68,
+  {role:'staff',position:[2.0,0,-6.72],rotation:0,gender:'female',heightMeters:1.68,
     clothes:['shirt','jacket','skirt','shoes','hair_ponytail01'],
     colors:{shirt:'#f2f2f0',jacket:'#1e314c',skirt:'#1e314c',shoes:'#28282d',hair_ponytail01:'#30221c'}},
-  {role:'guest',position:[2.7,0,-2.85],rotation:Math.PI,gender:'male',heightMeters:1.82,
-    clothes:['shirt','jeans','shoes','hair_short04'],
-    colors:{shirt:'#d9e2e9',jeans:'#222a38',shoes:'#382821',hair_short04:'#28211c'}}
+  {role:'guest',position:[2.35,0,-3.60],rotation:Math.PI,gender:'male',heightMeters:1.82,
+    clothes:['shirt','jacket','jeans','shoes','hair_short04'],
+    colors:{shirt:'#f0eee9',jacket:'#5a4d43',jeans:'#30333b',shoes:'#382821',hair_short04:'#28211c'}}
 ];
 const basePath=import.meta.env.BASE_URL+'models/humans/';
 function allMeshes(root){const output=[];root.traverse(o=>{if(o.isSkinnedMesh)output.push(o)});return output}
