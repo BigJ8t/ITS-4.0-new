@@ -84,7 +84,7 @@ function resetCase(){
   $('confirmBtn').disabled=true;
   $('decisionArea').classList.remove('hidden');
   $('resultArea').classList.add('hidden');
-  hotel.setView?.('overview');
+  hotel.applyScenarioVisual?.(activeScenario.id);
   translate();
 }
 function drawCaseSelector(){
@@ -168,6 +168,7 @@ function showHint(force=false){
 }
 function translate(){
   document.documentElement.lang=language;const m=t();
+  hotel.setVisualLanguage?.(language);
   const labels=({
     it:['Abiti dei personaggi','Professionale blu','Heritage sabbia'],
     en:['Character outfits','Navy professional','Heritage sand'],
@@ -254,7 +255,7 @@ $('confirmBtn').addEventListener('click',()=>{
   $('resultTitle').setAttribute('tabindex','-1');$('resultTitle').focus();
 });
 $('retryBtn').addEventListener('click',()=>{
-  stopSpeech();hotel.setView?.('overview');lastResult=null;chosen=null;$('confirmBtn').disabled=true;
+  stopSpeech();hotel.applyScenarioVisual?.(activeScenario.id);lastResult=null;chosen=null;$('confirmBtn').disabled=true;
   $('resultArea').classList.add('hidden');$('decisionArea').classList.remove('hidden');
   renderChoices();showHint();$('choices').querySelector('button')?.focus();
 });
@@ -264,4 +265,5 @@ $('closeHelp').addEventListener('click',close);$('startBtn').addEventListener('c
 modal.addEventListener('click',e=>{if(e.target===modal)close()});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 window.addEventListener('beforeunload',()=>{stopSpeech();hotel.dispose()});
+hotel.applyScenarioVisual?.(activeScenario.id,{instant:true});
 translate();
