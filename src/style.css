@@ -44,3 +44,32 @@ button:focus-visible,a:focus-visible{outline:3px solid #47dfeb;outline-offset:3p
 .close-btn{position:absolute;right:13px;top:9px;background:transparent;border:0;color:white;font-size:27px}
 .toast{position:absolute;bottom:22px;left:40%;background:#102638;border-radius:10px;padding:12px}
 @media(max-width:850px){.topbar{height:65px;padding:0 14px}.brand{font-size:21px}.center-title{font-size:11px}.subtag{display:none}.workspace{height:auto;min-height:100svh;overflow:visible}#scene{height:55vh;min-height:360px;bottom:auto}.scene-tag{top:10px;left:10px}.nav-help{display:none}.scenario-panel{position:relative;right:auto;top:calc(55vh - 8px);bottom:auto;width:calc(100% - 20px);margin:0 10px 30px;padding:19px;max-height:none}.scenario-panel h1{font-size:28px}}
+
+
+/* Universal Design for Learning (UDL): readable text, flexible access, and plain-language supports. */
+.learning-tools{background:#102c40;border:1px solid #356477;border-radius:12px;padding:12px;margin-bottom:18px;}
+.learning-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.learning-row label{font-size:12px;font-weight:700;color:#d3ecf3}
+.learning-tools select,.learning-level select{border:1px solid #68a6b5;background:#0b2538;color:#fff;padding:8px;border-radius:8px;font-size:12px;min-height:38px}
+.tool-btn{border:1px solid #68a6b5;color:#f1fdff;background:#1d4c60;border-radius:8px;padding:9px 11px;min-height:38px;font-size:12px;text-align:left}
+.tool-btn:hover,.tool-btn:focus-visible{background:#2d6a7d}
+.udl-details{margin-top:10px;padding-top:10px;border-top:1px solid #42677a;color:#e3f4f8;font-size:12px}
+.udl-details summary{cursor:pointer;font-weight:700;min-height:30px}
+.udl-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.udl-options label{display:flex;gap:7px;align-items:center;min-height:32px;cursor:pointer}
+.udl-options input{accent-color:#39d2da;min-width:17px;min-height:17px}
+.sr-caption{color:#bbd8e4;font-size:11px;line-height:1.5;margin:9px 0 0}
+.learning-level{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:13px 0;font-size:12px}
+.hint-card{padding:12px;border:1px solid #68a6b5;background:#21465a;color:#f1faff;line-height:1.5;border-radius:8px;font-size:12px;margin:10px 0}
+.hint-card[hidden]{display:none}
+.hint-button{margin:8px 0 2px;width:100%}
+.udl-note{font-size:10px;color:#aac6d4;line-height:1.6}
+.large-text .scenario-panel{width:min(490px,48vw)}
+.large-text .scenario-panel p,.large-text .choice,.large-text .learning-tools,.large-text .hint-card,.large-text .metric,.large-text .tool-btn{font-size:16px!important;line-height:1.7!important}
+.large-text .scenario-panel h1{font-size:39px}
+.high-contrast .scenario-panel,.high-contrast .learning-tools{background:#000!important;color:#fff!important;border-color:#fff!important}
+.high-contrast .choice,.high-contrast .problem-box,.high-contrast .hint-card,.high-contrast .tool-btn{background:#000!important;border:2px solid #fff!important;color:#fff!important}
+.high-contrast .scenario-panel p,.high-contrast .scenario-panel span{color:#fff}
+.reduced-motion *, .reduced-motion *::before,.reduced-motion *::after {animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+@media(max-width:850px){.large-text .scenario-panel{width:calc(100% - 20px)}.learning-row{align-items:stretch}.learning-row select{flex:1}.udl-options{grid-template-columns:1fr}}
+@media(prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
