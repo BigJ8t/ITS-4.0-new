@@ -79,3 +79,15 @@ button:focus-visible,a:focus-visible{outline:3px solid #47dfeb;outline-offset:3p
 .camera-toolbar .tool-btn{background:#112b3de8;border:1px solid #739aa9;backdrop-filter:blur(8px);box-shadow:0 5px 18px #09192755}
 .camera-toolbar .tool-btn:hover{background:#1d5261}
 @media(max-width:850px){.camera-toolbar{top:53px;left:10px;right:10px;max-width:none}.camera-toolbar .tool-btn{font-size:11px;padding:8px}}
+
+
+/* Wardrobe switch: accessible, compact and aligned with the learning panel. */
+.wardrobe-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 12px;margin:0 0 14px;border:1px solid #436c80;border-radius:11px;
+  background:#142f40;color:#e0eff6;font-size:12px}
+.wardrobe-bar label{font-weight:650;line-height:1.5}
+.wardrobe-bar select{background:#102434;color:#fff;border:1px solid #6291a5;
+  border-radius:8px;padding:8px;max-width:55%;min-height:36px}
+.high-contrast .wardrobe-bar{background:#000;color:#fff;border-color:#fff}
+.high-contrast .wardrobe-bar select{background:#000;color:#fff;border:2px solid #fff}
+@media(max-width:850px){.wardrobe-bar{flex-wrap:wrap}.wardrobe-bar select{max-width:100%}}
