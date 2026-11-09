@@ -1,91 +1,62 @@
-# ITSphere · Spazio Origine
+# ITSphere — Spazio Origine · Hospitality Decision Simulator
 
-Demo interattiva con **Three.js + Vite**: una reception 3D navigabile ispirata all'immagine di riferimento fornita per il progetto, con insegna **Spazio Origine**, scenario VIP e feedback formativo.
+**Allenarsi a decidere. Imparare dalle proprie scelte.**
 
-> **Stato:** prototipo dimostrativo, non digital twin fotogrammetrico della reception. Le geometrie sono costruite con primitive 3D e materiali procedurali. Le decisioni sono valutate da regole predefinite: **non è integrata un'intelligenza artificiale adattiva** e non sono caricati dati PwC/Open Data.
+Applicazione dimostrativa Three.js/Vite sviluppata nell'ambito di ITS 4.0 per simulare decisioni nel settore turistico-alberghiero.
 
-## Funzioni
+## Funzionalità implementate
 
-- Lobby 3D navigabile: piano in pietra, reception con retrobanco e insegna **Spazio Origine**, illuminazione calda, finestre, divanetti e figure stilizzate.
-- Camera libera tramite mouse, rotella e tasti **WASD** / frecce.
-- Scenario **Ospite VIP: camera non pronta** con tre scelte.
-- Effetti illustrativi delle decisioni su soddisfazione, costi ed efficienza.
-- Debriefing formativo e possibilità di riprovare.
-- Contatore tentativi salvato solo nel browser (`localStorage`).
-- Interfaccia responsive (desktop e mobile).
+- Reception tridimensionale **Spazio Origine**, ricostruzione illustrativa ispirata a una fotografia reale, non un rilievo architettonico.
+- **Due avatar distinti** in formato GLB con corpi riggati, capelli e abiti (receptionist e ospite). Sono modelli 3D sintetici: non sono scansioni fotorealistiche né riproduzioni di persone reali.
+- Scena esplorabile con mouse, zoom, touch e tastiera WASD.
+- Scenario *Ospite VIP: camera non pronta*, tre decisioni alternative, conseguenze illustrative e debriefing.
+- **UDL (Universal Design for Learning):** opzione per testo grande, alto contrasto, riduzione del movimento, versione semplificata dei testi, interazione solo testuale, trascrizione sempre disponibile e lettura vocale su richiesta.
+- **ADL / apprendimento adattivo basato su regole:** livelli guidato, autonomo, esperto; suggerimenti e supporti che variano per livello e numero di tentativi. Non si tratta di AI adattiva addestrata.
+- **Multilingua:** italiano, inglese e spagnolo per le istruzioni, le scelte e i feedback.
+- **Narratore vocale:** sintesi vocale Web Speech API del browser, su attivazione dell'utente, con lingua selezionata. La qualità dipende dalle voci installate; **non è una voce AI generativa con backend**.
+- Tentativi salvati localmente nel browser (nessun account o valutazione individuale persistente su server).
 
-## Installazione locale
+## Avvio in locale
 
-Prerequisiti: Node.js 20.19+ o 22.12+; npm.
+Richiede Node.js 22 e npm.
 
 ```bash
 npm install
+npm run assets
 npm run dev
 ```
 
-Apri l'indirizzo indicato dal terminale (di solito http://localhost:5173).
+Aprire l'URL indicato da Vite. Il download degli asset 3D avviene una volta sola e richiede Internet.
 
-Per verificare la build:
+### Compilazione
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Pubblicazione su GitHub Pages
+Il comando `build` esegue automaticamente il download degli asset, se non già presenti.
 
-1. Crea un repository GitHub (es. `itsphere-spazio-origine`).
-2. Carica **tutti i file sorgente del progetto**, inclusa la cartella `.github`, escludendo `node_modules` e `dist`.
-3. Imposta il branch principale su `main`.
-4. In GitHub, apri **Settings → Pages → Build and deployment → Source** e scegli **GitHub Actions**.
-5. Esegui un commit sul branch `main`. Il workflow pubblicherà il sito.
-6. Apri `https://TUO-USERNAME.github.io/itsphere-spazio-origine/` (con il nome effettivo del repository).
+### GitHub Pages
 
-Il file `vite.config.js` usa `base: './'` per supportare i percorsi relativi di GitHub Pages.
+Il workflow `.github/workflows/deploy.yml` si avvia ai push sul branch `main`, scarica gli asset compatibili, costruisce `dist/` e pubblica tramite GitHub Actions.
 
-Da terminale (se Git è configurato):
+Sito: https://bigj8t.github.io/ITS-4.0-new/
 
-```bash
-git init
-git add .
-git commit -m "Initial ITSphere Spazio Origine demo"
-git branch -M main
-git remote add origin https://github.com/TUO-USERNAME/itsphere-spazio-origine.git
-git push -u origin main
-```
+## Licenze e provenienza asset
 
-## Come personalizzare
+I modelli umani e l'abbigliamento provengono dai file compilati del progetto open-source **CharacterCreator**, basati su asset MakeHuman e contenuti CC0, secondo il [registro delle licenze del progetto originale](https://github.com/kblood/CharacterCreator). I file sono scaricati da un commit fissato, durante la build, per migliorare riproducibilità e trasparenza.
 
-| File | Contenuto |
-| --- | --- |
-| `src/scene.js` | Modello 3D, camera, arredi, luci e insegna Spazio Origine |
-| `src/scenario.js` | Opzioni, conseguenze, punteggi illustrativi, debriefing |
-| `src/main.js` | Logica interattiva e persistenza dei tentativi |
-| `src/style.css` | Palette, layout responsive e UI |
-| `index.html` | Struttura HTML e testi di presentazione |
-| `.github/workflows/deploy.yml` | Deployment automatico |
+La procedura di download è in `scripts/fetch-assets.mjs`. Il codice di integrazione di ITSphere è indipendente dal codice GPL dell'editor CharacterCreator.
 
-Per una replica architettonica fedele alla foto serviranno misure, fotografie aggiuntive o un modello 3D GLB/GLTF. Un'immagine singola non consente di ricavare geometrie e materiali esatti.
+In versioni precedenti era utilizzato un modello dimostrativo CesiumMan di Khronos/Cesium (CC BY 4.0), ora sostituito nella scena.
 
-## Estensioni previste (non incluse)
+## Stato e limiti
 
-- Import di modello architettonico GLB/GLTF di Spazio Origine.
-- Avatar 3D animati e dialoghi vocali.
-- Più scenari e ruoli (Concierge, Booking, Revenue Manager).
-- Motore AI adattivo con backend e privacy-by-design.
-- Dataset reali Open Data e flussi professionali PwC (solo con dati e permessi effettivi).
-- Dashboard docente, tracciamento competenze e valutazione degli utenti.
+Questa è una **demo tecnica e formativa**, non un prodotto validato scientificamente. I punteggi di soddisfazione/costi/efficienza sono indicatori didattici illustrativi e non misure reali di performance.
 
-## Privacy e licenze
+Integrazioni future: un servizio backend con gestione sicura delle credenziali per la generazione narrativa AI, tutoraggio più avanzato, analytics per docenti, verifica UDL con utenti e analisi Open Data/PwC quando effettivamente disponibili.
 
-La demo non invia dati a server applicativi e non richiede credenziali. Carica la libreria Three.js tramite le dipendenze del progetto. Aggiungi al repository solo fotografie, marchi e risorse per cui disponi dei diritti necessari.
+## Attenzione privacy
 
-
-## Attribuzione modelli 3D
-
-Il prototipo include temporaneamente il modello **CesiumMan.glb**, proveniente da
-[Khronos glTF Sample Assets — CesiumMan](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMan),
-copyright © 2017 Cesium, con licenza
-[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
-
-**Nota sul realismo:** i due avatar sono segnaposto 3D texturizzati e riggati e non sono ricostruzioni fotorealistiche di persone. Devono essere sostituiti con modelli umani realistici distinti, dotati di licenze adeguate, per la versione finale del simulatore.
+La sintesi vocale dipende dalle API del browser e dalle voci del sistema operativo; la gestione dei dati vocali può variare a seconda di browser e dispositivo. Nessuna registrazione del microfono è implementata in questa demo.
