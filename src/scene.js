@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { installHumanCharacters } from './humans.js';
+import { createScenarioVisuals, scenarioVisuals } from './scenario-visuals.js';
 
 // Spazio Origine: proportional visual reconstruction from ONE reference photograph.
 // Architectural proportions are relative visual estimates, not laser/metric survey.
@@ -244,10 +245,15 @@ export function createHotelScene(container) {
     guest:{position:[4.8,2.18,-.5],target:[2.35,1.44,-3.60]},
     reception:{position:[-1.8,2.34,-1.9],target:[2.0,1.46,-6.72]}
   };
+  const visualVariants=createScenarioVisuals(scene);
+  let activeVisual='vip';
   let cameraJourney=null;
   let pulse=null;
   function setView(name,{instant=false}={}){
-    const preset=viewPresets[name]||viewPresets.overview;
+    const scenePreset=scenarioVisuals[activeVisual]||scenarioVisuals.vip;
+    const preset=name==='overview'
+      ?{position:scenePreset.camera,target:scenePreset.target}
+      :(viewPresets[name]||viewPresets.overview);
     const destination=new THREE.Vector3(...preset.position),lookAt=new THREE.Vector3(...preset.target);
     if(instant || manualReducedMotion || motionPref?.matches){
       camera.position.copy(destination);controls.target.copy(lookAt);controls.update();
@@ -258,8 +264,8 @@ export function createHotelScene(container) {
     }
   }
   function reactToChoice(choice){
-    if(choice==='alternative')setView('reception');
-    else if(choice==='negotiate')setView('guest');
+    if(choice==='alternative'||choice==='b')setView('reception');
+    else if(choice==='negotiate'||choice==='c')setView('guest');
     else setView('overview');
     pulse={time:0,color:choice==='alternative'?'#80ecd4':choice==='negotiate'?'#ffe2ad':'#9de0f1'};
   }
@@ -274,6 +280,13 @@ export function createHotelScene(container) {
   window.addEventListener('keydown',down);window.addEventListener('keyup',up);
   let raf=0,disposed=false,then=0;
   const humans=installHumanCharacters(scene,()=>disposed);
+  function applyScenarioVisual(id,{instant=false}={}){
+    const config=visualVariants.apply(id);
+    activeVisual=visualVariants.getCurrent();
+    humans.setScenario(activeVisual);
+    setView('overview',{instant});
+    return config;
+  }
   let manualReducedMotion=false;
   const motionPref=window.matchMedia?.('(prefers-reduced-motion: reduce)');
   const forward=new THREE.Vector3(),right=new THREE.Vector3(),move=new THREE.Vector3();
@@ -313,6 +326,6 @@ export function createHotelScene(container) {
     const {width,height}=container.getBoundingClientRect();if(!width||!height)return;
     camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
   };
-  const observer=new ResizeObserver(resize);observer.observe(container);resize();raf=requestAnimationFrame(animate);
-  return {setView,reactToChoice,setCharacterStyle(style){humans.setStyle(style)},setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v);if(v)signal.intensity=0},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
+  const observer=new ResizeObserver(resize);observer.observe(container);resize();applyScenarioVisual('vip',{instant:true});raf=requestAnimationFrame(animate);
+  return {setView,reactToChoice,applyScenarioVisual,setVisualLanguage(lang){visualVariants.setLanguage(lang)},setCharacterStyle(style){humans.setStyle(style)},setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v);if(v)signal.intensity=0},dispose(){disposed=true;visualVariants.dispose();humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
 }
