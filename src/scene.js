@@ -314,5 +314,5 @@ export function createHotelScene(container) {
     camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();raf=requestAnimationFrame(animate);
-  return {setView,reactToChoice,setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v);if(v)signal.intensity=0},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
+  return {setView,reactToChoice,setCharacterStyle(style){humans.setStyle(style)},setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v);if(v)signal.intensity=0},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
 }
