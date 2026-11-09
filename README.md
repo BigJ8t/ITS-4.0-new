@@ -79,3 +79,13 @@ Per una replica architettonica fedele alla foto serviranno misure, fotografie ag
 ## Privacy e licenze
 
 La demo non invia dati a server applicativi e non richiede credenziali. Carica la libreria Three.js tramite le dipendenze del progetto. Aggiungi al repository solo fotografie, marchi e risorse per cui disponi dei diritti necessari.
+
+
+## Attribuzione modelli 3D
+
+Il prototipo include temporaneamente il modello **CesiumMan.glb**, proveniente da
+[Khronos glTF Sample Assets — CesiumMan](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMan),
+copyright © 2017 Cesium, con licenza
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+**Nota sul realismo:** i due avatar sono segnaposto 3D texturizzati e riggati e non sono ricostruzioni fotorealistiche di persone. Devono essere sostituiti con modelli umani realistici distinti, dotati di licenze adeguate, per la versione finale del simulatore.
