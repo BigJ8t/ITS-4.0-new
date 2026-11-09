@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 export function createHotelScene(container) {
   const scene = new THREE.Scene();
@@ -91,7 +92,7 @@ export function createHotelScene(container) {
     const height = Math.max(bb.max.y-bb.min.y, 0.01);
     const scale = 1.78/height;
     function avatar(x,z,angle,factor){
-      const clone = base.clone(true);
+      const clone = cloneSkinned(base);
       clone.scale.setScalar(scale*factor);
       clone.rotation.y=angle;
       clone.updateMatrixWorld(true);
