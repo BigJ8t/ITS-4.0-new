@@ -33,6 +33,23 @@ Le slide non descrivono nel dettaglio tutti e sei i casi. I tre casi aggiuntivi 
 
 Le conseguenze sono ipotesi formative predefinite: non equivalgono a dati economici reali, predizioni AI o valutazioni validate delle competenze.
 
+## Scene visive dinamiche per scenario
+
+Il visualizzatore Three.js usa l'architettura di Spazio Origine come base comune e il modulo `src/scenario-visuals.js` per attivare oggetti e inquadrature coerenti con la situazione formativa. Il collegamento avviene tramite `applyScenarioVisual(id)` quando si sceglie o si ripristina un caso.
+
+| Scenario | Allestimento visivo |
+| --- | --- |
+| VIP | Ospite alla reception, bagaglio premium e segnale di benvenuto |
+| Hall affollata | Coda di quattro ospiti aggiuntivi, stanchions, bagagli e pannello di attesa |
+| Dati contraddittori | Monitor dedicato alla verifica dello stato camera |
+| Overbooking | Gruppo di ospiti con più valigie e avviso di esaurimento disponibilità |
+| Revenue management | Monitor con grafico puramente illustrativo e legenda dati dimostrativi |
+| Concierge | Desk informazioni, materiale turistico e percorso schematico con due ospiti |
+
+I personaggi aggiuntivi riutilizzano modelli umani già caricati e con licenza compatibile. Le figure sono ancora asset 3D sintetici, non persone fotogrammetriche. L'interfaccia e i testi restano disponibili in italiano, inglese, spagnolo e francese; in modalità UDL `Riduci animazioni` sono disattivate le transizioni della telecamera.
+
+**Precisazione:** gli indicatori della dashboard revenue e il percorso concierge sono contenuti illustrativi, non dati in tempo reale né itinerari geograficamente verificati.
+
 ## Avvio in locale
 
 Richiede Node.js 22 e npm.
