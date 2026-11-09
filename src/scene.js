@@ -2,91 +2,242 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { installHumanCharacters } from './humans.js';
 
+// Spazio Origine: proportional visual reconstruction from ONE reference photograph.
+// Architectural proportions are relative visual estimates, not laser/metric survey.
 export function createHotelScene(container) {
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#172737');
-  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
-  camera.position.set(6.8, 3.6, 9.3);
-  const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color('#c6c0b4');
+  scene.fog=new THREE.Fog('#d9d2c5',17,34);
+  const camera=new THREE.PerspectiveCamera(57,1,.1,100);
+  camera.position.set(8.2,2.9,7.1);
+  const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.55;
+  renderer.toneMappingExposure=1.23;
   container.appendChild(renderer.domElement);
-  const controls=new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping=true; controls.target.set(0,1.5,-3);
-  controls.minDistance=3; controls.maxDistance=19; controls.maxPolarAngle=Math.PI/2.05;
-  const mat=(color,metalness=0,roughness=.72)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
-  const cream=mat('#d9d3c5',.08,.24),wood=mat('#765239'),dark=mat('#18232c',.15,.36);
-  const marble=mat('#c3bcb0',.14,.3),gold=mat('#cdac76',.65,.28),teal=mat('#28cad5',.44,.23);
-  function box(x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);return o;}
-  function sphere(x,y,z,r,m){const o=new THREE.Mesh(new THREE.SphereGeometry(r,18,14),m);o.position.set(x,y,z);o.castShadow=true;scene.add(o);return o;}
-  function cylinder(x,y,z,r,h,m){const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,18),m);o.position.set(x,y,z);o.castShadow=true;scene.add(o);}
-  box(0,-.15,0,22,.3,22,cream);
-  box(0,4.7,0,22,.25,22,cream);
-  box(0,2.3,-9,22,4.7,.3,wood);
-  box(-10,2.3,0,.3,4.7,22,cream);
-  box(10,2.3,0,.3,4.7,22,cream);
-  // Two-tone geometric floor inspired by the Spazio Origine reception.
-  const terracotta=mat('#a98267',.08,.25);
-  for(let x=-9;x<10;x+=1.35)for(let z=-9;z<10;z+=1.35){
-    const n=(Math.round((x+9)/1.35)+Math.round((z+9)/1.35))%2;
-    box(x,.014,z,1.31,.022,1.31,n?cream:terracotta);
+  const controls=new OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  controls.target.set(0.35,1.65,-5.25);
+  controls.minDistance=2.7;
+  controls.maxDistance=17;
+  controls.maxPolarAngle=Math.PI/2.02;
+  const materials={
+    plaster:new THREE.MeshStandardMaterial({color:'#e9e4d9',roughness:.89}),
+    ivory:new THREE.MeshStandardMaterial({color:'#f5f0e5',roughness:.78}),
+    beige:new THREE.MeshStandardMaterial({color:'#c5a98d',roughness:.72}),
+    stone:new THREE.MeshStandardMaterial({color:'#243735',roughness:.29,metalness:.08}),
+    stoneEdge:new THREE.MeshStandardMaterial({color:'#41534d',roughness:.43}),
+    countertop:new THREE.MeshStandardMaterial({color:'#2b3b36',roughness:.22,metalness:.05}),
+    timber:new THREE.MeshStandardMaterial({color:'#ad7d51',roughness:.61}),
+    timberDark:new THREE.MeshStandardMaterial({color:'#81573a',roughness:.62}),
+    brass:new THREE.MeshStandardMaterial({color:'#c3a570',metalness:.64,roughness:.3}),
+    frosted:new THREE.MeshStandardMaterial({color:'#dce4d9',roughness:.22}),
+    foliage:new THREE.MeshStandardMaterial({color:'#567052',roughness:.92}),
+    orange:new THREE.MeshStandardMaterial({color:'#7e3325',roughness:.89}),
+    matteBlack:new THREE.MeshStandardMaterial({color:'#171c1c',roughness:.72})
+  };
+  function box(x,y,z,w,h,d,mat,extras={}){
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+    mesh.position.set(x,y,z);
+    mesh.castShadow=extras.castShadow!==false;mesh.receiveShadow=true;
+    if(extras.rotationY)mesh.rotation.y=extras.rotationY;
+    scene.add(mesh);return mesh;
   }
-  // Black stone pillars and arches, wood shelving.
-  const stone=mat('#293638',.22,.33);
-  for(const x of [-7,6]){
-    box(x,2.15,-6.7,.85,4.3,.85,stone);
-    box(x,4.2,-6.7,1.25,.35,1.25,stone);
+  function line(points,material,radius=.02){
+    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+    const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(12,points.length*6),radius,8,false),material);
+    scene.add(mesh);return mesh;
   }
-  box(1.5,2.45,-8.83,12,3.9,.18,stone);
-  for(let x=-4.5;x<8;x+=1.1){
-    box(x,2.5,-8.69,.08,3.9,.11,wood);
-    for(let y of [1.15,2.1,3.1])box(x,y,-8.48,.9,.065,.46,wood);
+  function ring(x,y,z,r,material,tube=.028){
+    const mesh=new THREE.Mesh(new THREE.TorusGeometry(r,tube,7,80),material);
+    mesh.position.set(x,y,z);scene.add(mesh);return mesh;
   }
-  // Reception desk, with branded timber fascia.
-  box(1,.82,-5.8,9,1.5,1.55,wood);
-  box(1,1.58,-5.8,9.3,.12,1.82,stone);
-  box(1,.14,-4.99,9,.07,.09,teal);
-  for(let x=-3;x<5.5;x+=.75)box(x,.83,-5.007,.022,1.32,.02,gold);
-  function sign(message,x,y,z,width,height,{font='bold 106px Arial',color='#ecd6ab'}={}){
-    const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=250;
-    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,1200,250);
-    ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=font;ctx.fillText(message,600,125);
-    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false}));
-    mesh.position.set(x,y,z);scene.add(mesh);
+  function sign(text,x,y,z,width,height,color='#1d2422',font='bold 105px Georgia'){
+    const canvas=document.createElement('canvas');canvas.width=1400;canvas.height=200;
+    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(text,canvas.width/2,canvas.height/2,canvas.width-35);
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
+    mesh.position.set(x,y,z);scene.add(mesh);return mesh;
   }
-  sign('SPAZIO ORIGINE',1,1.02,-4.99,6.6,.65,{font:'bold 116px Georgia',color:'#2a1e13'});
-  sign('SPAZIO ORIGINE',1.5,3.55,-8.55,6.5,.9,{font:'bold 112px Georgia'});
-  // Computer and ornaments on desk.
-  box(-1,1.98,-6.12,1.25,.8,.07,dark);
-  box(-1,1.59,-6.2,.08,.15,.32,gold);
-  for(const x of [4.5,5.25])cylinder(x,1.88,-6.1,.14,.58,cream);
-  // Lounge and plants.
-  const navy=mat('#22384a'),green=mat('#628362');
-  for(const z of [1.8,5]){
-    box(-6,.5,z,3.1,.75,1.35,navy);
-    box(-6,1.1,z-.58,3.1,.95,.25,navy);
-    box(-7.5,.76,z,.25,.65,1.5,navy);
+  // Reference: wide ceremonial lobby, substantial vertical scale, not a compact retail shop.
+  const room={width:22,depth:20,height:6.4};
+  box(0,-.21,0,room.width,.42,room.depth,materials.beige);
+  // Material proportions: diagonal diamond tiles approximately 55-70 cm across.
+  const tileCanvas=document.createElement('canvas');
+  tileCanvas.width=512;tileCanvas.height=512;
+  const tx=tileCanvas.getContext('2d');
+  const colors=['#e8dfca','#a96e51','#313d3b','#e2c4a6'];
+  const count=8,side=512/count;
+  for(let y=0;y<count;y++)for(let x=0;x<count;x++){
+    tx.fillStyle=((x+y)%4===0)?colors[2]:((x+y)%2===0?colors[0]:colors[1]);
+    tx.fillRect(x*side,y*side,side,side);
+    tx.strokeStyle='#d1c5ac';tx.lineWidth=3;tx.strokeRect(x*side+1,y*side+1,side-2,side-2);
+    tx.strokeStyle='#d5c5af';tx.lineWidth=1;tx.strokeRect(x*side+5,y*side+5,side-10,side-10);
   }
-  for(const [x,z] of [[-8,0],[8,1],[7,-6]]){
-    cylinder(x,.35,z,.48,.7,wood);
-    cylinder(x,1.1,z,.09,.9,wood);
-    for(let n=0;n<7;n++){
-      const a=n*Math.PI*2/7;sphere(x+Math.cos(a)*.5,1.55+(n%3)*.12,z+Math.sin(a)*.5,.33,green);
+  const tileTex=new THREE.CanvasTexture(tileCanvas);
+  tileTex.colorSpace=THREE.SRGBColorSpace;
+  tileTex.wrapS=tileTex.wrapT=THREE.RepeatWrapping;
+  tileTex.repeat.set(3.15,3.15);
+  tileTex.center.set(.5,.5);tileTex.rotation=Math.PI/4;
+  tileTex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(22,20),new THREE.MeshStandardMaterial({map:tileTex,roughness:.42,metalness:.03}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=.006;floor.receiveShadow=true;scene.add(floor);
+
+  // Large off-white vaulted ceiling. High arch profiles are placed BEHIND
+  // structural columns so no decorative ring floats through the photo-space.
+  box(0,6.45,0,22,.28,20,materials.plaster);
+  box(-10.8,3,0,.28,6.2,20,materials.plaster);
+  box(10.8,3,0,.28,6.2,20,materials.plaster);
+  box(0,3.1,-9.65,22,6.2,.28,materials.plaster);
+  // Left arcade with broad semi-circular openings, framed in realistic plaster thickness.
+  function archOpening(cx,z,span,shoulder=3.75,rise=1.65){
+    const outer=span*.5+.52,upper=6.26;
+    const shape=new THREE.Shape();
+    shape.moveTo(-outer,0);shape.lineTo(outer,0);shape.lineTo(outer,upper);
+    shape.lineTo(-outer,upper);shape.lineTo(-outer,0);
+    const hole=new THREE.Path();
+    // Curve rises from both springing points; the base of the arch is open.
+    const w=span/2;
+    hole.moveTo(-w,-.12);hole.lineTo(w,-.12);hole.lineTo(w,shoulder);
+    for(let i=0;i<=28;i++){
+      const theta=Math.PI*i/28;
+      const px=w*Math.cos(theta);
+      const py=shoulder+rise*Math.sin(theta);
+      hole.lineTo(px,py);
+    }
+    hole.lineTo(-w,-.12);
+    shape.holes.push(hole);
+    const g=new THREE.ExtrudeGeometry(shape,{depth:.58,bevelEnabled:false,curveSegments:32});
+    const mesh=new THREE.Mesh(g,materials.plaster);
+    mesh.position.set(cx,0,z);mesh.receiveShadow=true;scene.add(mesh);
+    // Subtle soffit curvature.
+    line(Array.from({length:19},(_,i)=>{
+      const theta=Math.PI*i/18;
+      return [cx+w*Math.cos(theta),shoulder+rise*Math.sin(theta),z+.60];
+    }),materials.ivory,.043);
+  }
+  archOpening(-5.55,-8.5,4.65,3.61,1.65);
+  archOpening(-10,-1.75,4.3,3.55,1.74);
+
+  // Black-green stone structural columns: strong square profiles (photo characteristic).
+  function column(x,z,w=.91){
+    box(x,2.85,z,w,5.7,w,materials.stone);
+    box(x,.19,z,w+0.15,.38,w+0.15,materials.stoneEdge);
+    box(x,5.49,z,w+0.14,.3,w+0.14,materials.stoneEdge);
+    for(let i=0;i<12;i++){
+      const seed=(i*17)%23;
+      const a=x-w/2+.08+(seed/23)*(w-.16);
+      line([[a,.5,z+w/2+.013],[a+.09,1.3+i*.24,z+w/2+.016],[a-.03,2.5+i*.17,z+w/2+.018]],materials.stoneEdge,.007);
     }
   }
-  // Realistic layered MakeHuman characters with individually styled uniforms.\n  // Keep decision-making engine separate from visuals.\n  // Warm ceiling rings and ambient lights.
-  scene.add(new THREE.HemisphereLight(0xc6e3f2,0x53432d,2.5));
-  const sunlight=new THREE.DirectionalLight(0xffdfb2,3.4);
-  sunlight.position.set(5,10,8);sunlight.castShadow=true;scene.add(sunlight);
-  for(const x of [-6,0,6]){
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(1.1,.055,10,55),new THREE.MeshBasicMaterial({color:0xffdfa6}));
-    ring.position.set(x,4,-1.4);ring.rotation.x=Math.PI/2;scene.add(ring);
-    const lamp=new THREE.PointLight(0xffd0a0,18,11);lamp.position.set(x,3.75,-1.4);scene.add(lamp);
+  column(-7.5,-5.2,1.02);
+  column(-2.55,-6.15,.98);
+  column(8.6,-6.75,.9);
+
+  // Back wall: shelving on right ONLY, preserving open archways on left.
+  box(3.9,2.85,-9.05,12.8,5.7,.24,materials.beige);
+  box(3.9,2.9,-8.86,12.35,4.55,.16,materials.timber);
+  for(let xx=-1.98;xx<10.02;xx+=1.08){
+    box(xx,2.95,-8.72,.075,4.15,.55,materials.timberDark);
+    for(const yy of [1.11,2.12,3.12,4.08]){
+      box(xx+.54,yy,-8.72,1.09,.075,.6,materials.timberDark);
+    }
   }
+  // Furnish a few cubbies, instead of a repetitively empty grid.
+  for(let n=0;n<17;n++){
+    const x=-1.49+(n%11)*1.08,y=1.26+(Math.floor(n/11)%3)*.99;
+    if(x>8.2)continue;
+    const urn=new THREE.Mesh(new THREE.CylinderGeometry(.095,.13,.24,14),n%3===0?materials.frosted:n%3===1?materials.beige:materials.ivory);
+    urn.position.set(x,y,-8.32);scene.add(urn);
+    if(n%5===0){
+      const orb=new THREE.Mesh(new THREE.SphereGeometry(.1,12,10),materials.brass);orb.position.set(x+.25,y+.17,-8.3);scene.add(orb);
+    }
+  }
+  // Floral "Nature First" wall seen left of the shelf in the reference.
+  box(-3.7,3.45,-8.65,2.1,3.0,.16,materials.timberDark);
+  for(let j=0;j<7;j++){
+    const x=-4.65+j*.25;
+    line([[x,2.15,-8.51],[x+.13,2.85,-8.49],[x-.08,3.65,-8.49],[x+.14,4.6,-8.49]],materials.foliage,.028);
+  }
+  sign('NATURE FIRST',-3.7,4.57,-8.42,1.68,.32,'#f7eed6','bold 77px Arial');
+
+  // Signature luminous circular perforated wall mosaic, high on the right.
+  const center=[7.6,5.24,-8.55];
+  ring(...center,1.32,materials.brass,.065);
+  for(const radius of [.43,.67,.91,1.13]){
+    ring(center[0],center[1],center[2]+.018,radius,materials.frosted,.023);
+    const n=Math.round(16+radius*27);
+    for(let k=0;k<n;k++){
+      const a=Math.PI*2*k/n + radius;
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(.038,7,6),k%3===0?materials.brass:materials.frosted);
+      dot.position.set(center[0]+radius*Math.cos(a),center[1]+radius*Math.sin(a),center[2]+.048);
+      scene.add(dot);
+    }
+  }
+
+  // Bank proportions: 9.8 m long, ~1.1 m tall, prominent at right foreground.
+  // Place the attendant BEHIND it and guest IN FRONT of it.
+  const desk={x:2.9,z:-5.24,w:9.8,front:-4.34};
+  box(desk.x,.56,desk.z,desk.w,1.12,1.62,materials.timber);
+  box(desk.x,1.18,desk.z,desk.w+.30,.115,1.78,materials.countertop);
+  box(desk.x,.17,desk.z,desk.w,.33,1.65,materials.stone);
+  // Timber fascia and narrow horizontally laid wooden strips.
+  box(desk.x,.76,desk.front,desk.w-.18,.84,.065,materials.timber);
+  for(let y=.41;y<1.13;y+=.105)box(desk.x,y,desk.front+.041,desk.w-.23,.013,.018,materials.timberDark);
+  // Dark framing at left and right sides
+  for(const xx of [desk.x-desk.w/2+.04,desk.x+desk.w/2-.04])
+    box(xx,.78,desk.front+.047,.065,.92,.085,materials.timberDark);
+  // Printed hotel identity on front and circular decorative emblem.
+  sign('SPAZIO',desk.x-2.15,.80,desk.front+.095,1.8,.38,'#252320','bold 112px Georgia');
+  sign('ORIGINE',desk.x+2.25,.80,desk.front+.095,2.0,.38,'#252320','bold 112px Georgia');
+  ring(desk.x,.82,desk.front+.109,.41,materials.brass,.063);
+  for(let n=0;n<12;n++){
+    const a=n*Math.PI/6;
+    const petal=new THREE.Mesh(new THREE.SphereGeometry(.068,10,7),n%2?materials.frosted:materials.brass);
+    petal.position.set(desk.x+.22*Math.cos(a),.82+.22*Math.sin(a),desk.front+.12);
+    scene.add(petal);
+  }
+  // Desk computing equipment, hidden behind counter from the primary visitor view.
+  box(1.1,1.58,-5.83,1.15,.68,.075,materials.matteBlack);
+  box(1.1,1.20,-5.94,.07,.18,.21,materials.matteBlack);
+  box(2.6,1.3,-5.7,.85,.06,.37,materials.matteBlack);
+  for(const x of [6.4,6.95]){
+    const vase=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,.27,14),materials.frosted);
+    vase.position.set(x,1.4,-5.6);scene.add(vase);
+  }
+
+  // Photo shows an intimate seating area through the arches on the left.
+  for(const z of [-5.0,-2.35]){
+    box(-8.9,.43,z,1.55,.56,.75,materials.orange);
+    box(-8.9,.85,z-.32,1.55,.58,.16,materials.orange);
+  }
+  // Stone-topped side table and guest information plinth.
+  box(-6.1,.45,-1.1,.65,.9,.65,materials.timberDark);
+  box(-6.1,.94,-1.1,.85,.08,.72,materials.stone);
+  box(-6.8,.80,-6.2,.65,1.58,.52,materials.stone);
+  box(-6.8,1.59,-6.2,.7,.05,.54,materials.brass);
+
+  // Architectural photography-style lighting, no floating luminous ceiling rings.
+  scene.add(new THREE.HemisphereLight(0xe9eff5,0x967559,2.05));
+  const daylight=new THREE.DirectionalLight(0xfff0d8,3.4);
+  daylight.position.set(-6.8,10.8,8);
+  daylight.castShadow=true;
+  daylight.shadow.mapSize.set(2048,2048);
+  daylight.shadow.camera.left=-15;
+  daylight.shadow.camera.right=15;
+  daylight.shadow.camera.top=15;
+  daylight.shadow.camera.bottom=-15;
+  daylight.shadow.normalBias=.025;
+  scene.add(daylight);
+  const softFill=new THREE.PointLight(0xffd9b4,45,17);
+  softFill.position.set(5,5,-3);scene.add(softFill);
+  const rearFill=new THREE.PointLight(0xe4eecf,21,11);
+  rearFill.position.set(8,5,-7.5);scene.add(rearFill);
   const held=new Set();const keys=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
   function down(e){if(['INPUT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName))return;
     const k=e.key.toLowerCase();if(keys.includes(k)){held.add(k);if(k.startsWith('arrow'))e.preventDefault();}}
