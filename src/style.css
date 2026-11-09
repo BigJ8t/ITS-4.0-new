@@ -73,3 +73,9 @@ button:focus-visible,a:focus-visible{outline:3px solid #47dfeb;outline-offset:3p
 .reduced-motion *, .reduced-motion *::before,.reduced-motion *::after {animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media(max-width:850px){.large-text .scenario-panel{width:calc(100% - 20px)}.learning-row{align-items:stretch}.learning-row select{flex:1}.udl-options{grid-template-columns:1fr}}
 @media(prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+
+.camera-toolbar{position:absolute;top:72px;left:20px;display:flex;flex-wrap:wrap;gap:8px;z-index:2;max-width:calc(100% - 460px)}
+.camera-toolbar .tool-btn{background:#112b3de8;border:1px solid #739aa9;backdrop-filter:blur(8px);box-shadow:0 5px 18px #09192755}
+.camera-toolbar .tool-btn:hover{background:#1d5261}
+@media(max-width:850px){.camera-toolbar{top:53px;left:10px;right:10px;max-width:none}.camera-toolbar .tool-btn{font-size:11px;padding:8px}}
