@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { installHumanCharacters } from './humans.js';
 
 export function createHotelScene(container) {
   const scene = new THREE.Scene();
@@ -79,34 +78,7 @@ export function createHotelScene(container) {
       const a=n*Math.PI*2/7;sphere(x+Math.cos(a)*.5,1.55+(n%3)*.12,z+Math.sin(a)*.5,.33,green);
     }
   }
-  // Replace previous capsule-shaped figures with textured, rigged GLB characters.
-  // CesiumMan is a temporary reference avatar (CC BY 4.0), not a photorealistic person.
-  // Future production models should be distinct licensed characters for staff and guest.
-  const characterRoots = [];
-  const loader = new GLTFLoader();
-  loader.load(import.meta.env.BASE_URL + 'models/guest.glb', (gltf) => {
-    if (disposed) return;
-    const base = gltf.scene;
-    base.updateMatrixWorld(true);
-    const bb = new THREE.Box3().setFromObject(base);
-    const height = Math.max(bb.max.y-bb.min.y, 0.01);
-    const scale = 1.78/height;
-    function avatar(x,z,angle,factor){
-      const clone = cloneSkinned(base);
-      clone.scale.setScalar(scale*factor);
-      clone.rotation.y=angle;
-      clone.updateMatrixWorld(true);
-      const bounds=new THREE.Box3().setFromObject(clone);
-      clone.position.set(x,-bounds.min.y,z);
-      scene.add(clone);characterRoots.push(clone);
-    }
-    avatar(2.4,-3.15,Math.PI,1);
-    avatar(1.8,-7,0,.96);
-  }, undefined, (err)=>{
-    console.error('Unable to load GLB character', err);
-    // The training scenario remains available even if the 3D avatar fails.
-  });
-  // Warm ceiling rings and ambient lights.
+  // Realistic layered MakeHuman characters with individually styled uniforms.\n  // Keep decision-making engine separate from visuals.\n  // Warm ceiling rings and ambient lights.
   scene.add(new THREE.HemisphereLight(0xc6e3f2,0x53432d,2.5));
   const sunlight=new THREE.DirectionalLight(0xffdfb2,3.4);
   sunlight.position.set(5,10,8);sunlight.castShadow=true;scene.add(sunlight);
@@ -121,6 +93,9 @@ export function createHotelScene(container) {
   function up(e){held.delete(e.key.toLowerCase())}
   window.addEventListener('keydown',down);window.addEventListener('keyup',up);
   let raf=0,disposed=false,then=0;
+  const humans=installHumanCharacters(scene,()=>disposed);
+  let manualReducedMotion=false;
+  const motionPref=window.matchMedia?.('(prefers-reduced-motion: reduce)');
   const forward=new THREE.Vector3(),right=new THREE.Vector3(),move=new THREE.Vector3();
   function animate(now){
     if(disposed)return;
@@ -136,6 +111,7 @@ export function createHotelScene(container) {
       const dest=controls.target.clone().add(move);
       if(Math.abs(dest.x)<8.5&&dest.z>-8&&dest.z<9){controls.target.add(move);camera.position.add(move);}
     }
+    humans.update((manualReducedMotion||motionPref?.matches)?0:dt);
     controls.update();renderer.render(scene,camera);raf=requestAnimationFrame(animate);
   }
   const resize=()=>{
@@ -143,5 +119,5 @@ export function createHotelScene(container) {
     camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();raf=requestAnimationFrame(animate);
-  return {dispose(){disposed=true;cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
+  return {setReducedMotion(v){manualReducedMotion=!!v;humans.setReducedMotion(!!v)},dispose(){disposed=true;humans.dispose();cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);controls.dispose();scene.traverse(o=>{o.geometry?.dispose();});renderer.dispose();renderer.domElement.remove();}};
 }
