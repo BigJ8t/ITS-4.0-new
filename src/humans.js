@@ -5,10 +5,10 @@ import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 // Source asset licence: CC0 MakeHuman-based models, see README and licenses.
 // Characters are styled for the hotel context; not scans of real employees/guests.
 const people = [
-  {role:'staff',position:[1.8,0,-7],rotation:0,gender:'female',
+  {role:'staff',position:[1.7,0,-7.05],rotation:0,gender:'female',heightMeters:1.68,
     clothes:['shirt','jacket','skirt','shoes','hair_ponytail01'],
     colors:{shirt:'#f2f2f0',jacket:'#1e314c',skirt:'#1e314c',shoes:'#28282d',hair_ponytail01:'#30221c'}},
-  {role:'guest',position:[2.4,0,-3.15],rotation:Math.PI,gender:'male',
+  {role:'guest',position:[2.7,0,-2.85],rotation:Math.PI,gender:'male',heightMeters:1.82,
     clothes:['shirt','jeans','shoes','hair_short04'],
     colors:{shirt:'#d9e2e9',jeans:'#222a38',shoes:'#382821',hair_short04:'#28211c'}}
 ];
@@ -87,6 +87,10 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
       const main=cloneSkinned(templates.base_body_anim.scene);
       const body=allMeshes(main).find(m=>m.morphTargetDictionary)||allMeshes(main)[0];
       if(!body){console.warn('Avatar model missing skinned body');continue;}
+      // Each avatar needs its OWN geometry. Skinned clones otherwise share
+      // a body geometry, so cutting covered triangles on one avatar can
+      // remove visible anatomy on the other.
+      body.geometry = body.geometry.clone();
       genderMorph(main,spec.gender);
       hideCoveredBody(body,spec.role);
       for(const item of spec.clothes){
@@ -106,20 +110,40 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
       main.updateMatrixWorld(true);
       const bounds=new THREE.Box3().setFromObject(main);
       const height=Math.max(.1,bounds.max.y-bounds.min.y);
-      const scaledHeight=spec.gender==='female'?1.70:1.80;
+      // Uniform, anatomically credible adult heights. Never stretch a
+      // model independently by X/Y/Z: that distorts head, legs and shoulders.
+      const scaledHeight=spec.heightMeters;
+      if(height < .65 || height > 3.5) {
+        console.warn('Unexpected source character height',spec.role,height);
+      }
       main.scale.setScalar(scaledHeight/height);
       main.rotation.y=spec.rotation;
       main.updateMatrixWorld(true);
       const finalBox=new THREE.Box3().setFromObject(main);
       main.position.set(spec.position[0],-finalBox.min.y,spec.position[2]);
+      // Raise only as much as the measured footwear requires: character
+      // feet must visibly meet the floor, without floating or sinking.
+      main.traverse(node=>{
+        if(node.isSkinnedMesh || node.isMesh){
+          node.castShadow=true;
+          node.receiveShadow=true;
+          node.frustumCulled=false;
+        }
+      });
       main.userData.characterRole=spec.role;
       scene.add(main);state.roots.push(main);
       if(templates.base_body_anim.animations.length){
         const mixer=new THREE.AnimationMixer(main);
         const clips=templates.base_body_anim.animations;
-        const idle=clips.find(c=>/idle|stand|breath|rest/i.test(c.name))||clips[0];
-        const action=mixer.clipAction(idle);action.setEffectiveWeight(.65);action.play();
-        state.mixers.push(mixer);
+        // Avoid playing an arbitrary first clip (possibly walking or
+        // running in place) at a reception counter.
+        const idle=clips.find(c=>/idle|stand|breath|rest/i.test(c.name));
+        if(idle){
+          const action=mixer.clipAction(idle);
+          action.setEffectiveWeight(.5);
+          action.play();
+          state.mixers.push(mixer);
+        }
       }
     }
     state.status='ready';
