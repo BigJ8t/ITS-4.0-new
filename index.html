@@ -6,6 +6,38 @@
   <meta name="theme-color" content="#0b1728" />
   <meta name="description" content="ITSphere: ambiente 3D interattivo per simulare decisioni professionali nel turismo, ambientato nella reception Spazio Origine." />
   <title>ITSphere | Spazio Origine — Simulazione 3D</title>
+  <!-- Critical fallback styles: ensure a readable, usable panel if an older
+       cached page temporarily fails to load Vite's hashed CSS bundle. -->
+  <style>
+    html,body{margin:0;background:#0b1b2b;color:#eaf6fb;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+    *{box-sizing:border-box}
+    button,select{font:inherit;cursor:pointer}
+    .topbar{height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;background:#0b1b2b;padding:0 22px}
+    .brand{color:white;text-decoration:none;font-weight:750;font-size:23px}
+    .accent{color:#51dce2}
+    .center-title{display:flex;gap:12px;align-items:center}
+    .workspace{position:relative;height:calc(100vh - 74px);min-height:580px;overflow:hidden;background:#12283a}
+    #scene{position:absolute;inset:0}
+    #scene canvas{display:block;width:100%;height:100%}
+    .scenario-panel{position:absolute;right:20px;top:20px;bottom:20px;overflow:auto;width:min(405px,38vw);padding:22px;background:#0c2132f5;border:1px solid #537a8c;border-radius:16px;box-shadow:0 16px 50px #081727bb}
+    .scenario-panel h1{font-size:32px;margin:15px 0}
+    .scenario-panel p{line-height:1.6}
+    .scene-tag{position:absolute;top:20px;left:20px;padding:9px 14px;background:#123043e8;border-radius:20px;font-size:12px}
+    .nav-help{position:absolute;bottom:20px;left:20px;background:#0c2638d9;border-radius:12px;padding:8px;color:#fff}
+    .key{display:inline-flex;border:1px solid #7394a7;border-radius:5px;padding:5px;margin:2px}
+    .hidden{display:none!important}
+    .choice,.tool-btn,.primary{background:#1b4b60;border:1px solid #5295a6;color:white;border-radius:9px;padding:10px;cursor:pointer}
+    .choices{display:grid;gap:10px}
+    .primary{display:block;width:100%;margin-top:12px;background:#2aadaa;color:#041c23;font-weight:700}
+    .primary:disabled{opacity:.45}
+    .modal{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#091725dc}
+    .modal-card{padding:25px;background:#153247;border-radius:14px;max-width:520px}
+    .learning-tools,.wardrobe-bar,.scenario-switch,.dialogue-transcript{padding:12px;background:#18384b;border-radius:10px;margin-bottom:12px}
+    .learning-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .learning-tools select,.scenario-switch select,.wardrobe-bar select{background:#102d40;border:1px solid #6b97ac;color:white;padding:8px;border-radius:8px}
+    .problem-box{background:#1b3d50;padding:12px;border-radius:10px}
+    @media(max-width:850px){.topbar{height:65px}.workspace{height:auto;min-height:100vh;overflow:visible}#scene{height:52vh;bottom:auto}.scenario-panel{position:relative;top:calc(52vh - 8px);left:auto;right:auto;bottom:auto;width:calc(100% - 20px);margin:0 10px 20px}.nav-help{display:none}}
+  </style>
 </head>
 <body>
   <div id="app">
