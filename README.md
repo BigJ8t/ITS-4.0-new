@@ -16,6 +16,23 @@ Applicazione dimostrativa Three.js/Vite sviluppata nell'ambito di ITS 4.0 per si
 - **Narratore vocale:** sintesi vocale Web Speech API del browser, su attivazione dell'utente, con lingua selezionata. La qualità dipende dalle voci installate; **non è una voce AI generativa con backend**.
 - Tentativi salvati localmente nel browser (nessun account o valutazione individuale persistente su server).
 
+## Catalogo delle simulazioni
+
+Il catalogo include **sei scenari selezionabili** dalla reception 3D. Ogni scenario mostra tre alternative, punteggi illustrativi e un debriefing in italiano, inglese, spagnolo e francese; i tentativi sono tracciati separatamente nel browser.
+
+| Caso | Ruolo | Provenienza del contesto |
+| --- | --- | --- |
+| Ospite VIP, camera non pronta | Front Office | Caso esplicito nelle slide ITSphere |
+| Hall affollata e reclamo | Front Office | Situazione descritta nelle slide/pitch |
+| Dati contraddittori | Booking Manager | Problema decisionale citato nei materiali |
+| Overbooking durante un evento | Booking Manager | **Nuovo scenario sviluppato** sul ruolo previsto dal progetto |
+| Domanda elevata e prezzi | Revenue Manager | **Nuovo scenario sviluppato** sul ruolo previsto dal progetto |
+| Itinerario accessibile con imprevisto | Concierge | **Nuovo scenario sviluppato**, coerente con UDL e customer care |
+
+Le slide non descrivono nel dettaglio tutti e sei i casi. I tre casi aggiuntivi sono quindi esercitazioni progettate per ampliare la demo e non devono essere attribuiti come trascrizioni del materiale originale.
+
+Le conseguenze sono ipotesi formative predefinite: non equivalgono a dati economici reali, predizioni AI o valutazioni validate delle competenze.
+
 ## Avvio in locale
 
 Richiede Node.js 22 e npm.
