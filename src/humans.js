@@ -129,59 +129,79 @@ function toneClothing(root,color,item){
     obj.castShadow=true;obj.receiveShadow=true;obj.frustumCulled=false;
   });
 }
-function createTrouserLiner(body,color){
-  // The jeans source GLB has visible holes in the legs in some poses.
-  // Create a properly rigged, dark fabric underlayer using ONLY body
-  // leg/hip triangles. It follows exactly the same skeleton as the jeans.
-  const original=body.geometry;
-  const zones=original.getAttribute('_cczone');
-  const index=original.getIndex();
-  if(!zones || !index)return null;
-  const triangles=[];
-  for(let i=0;i<index.count;i+=3){
-    const a=index.getX(i),b=index.getX(i+1),c=index.getX(i+2);
-    const marks=[zones.getX(a),zones.getX(b),zones.getX(c)];
-    // Include boundary triangles to close seams across the thigh/hip.
-    if(marks.some(z=>(z & (2|4))!==0))triangles.push(a,b,c);
-  }
-  if(!triangles.length)return null;
-  const geometry=original.clone();
-  geometry.setIndex(triangles);
-  geometry.clearGroups();
-  // Position the lining a few mm above the skin, but inside the outer jeans.
-  const positions=geometry.getAttribute('position');
-  const normals=geometry.getAttribute('normal');
-  if(positions && normals){
-    for(let i=0;i<positions.count;i++){
-      const nx=normals.getX(i),nz=normals.getZ(i);
-      const len=Math.hypot(nx,nz);
-      if(len<.15)continue;
-      const offset=.0045;
-      positions.setXYZ(i,
-        positions.getX(i)+offset*nx/len,
-        positions.getY(i),
-        positions.getZ(i)+offset*nz/len);
+function createSeamlessTrousers(body,color){
+  // Replace the perforated source jeans mesh entirely. Generate a watertight-looking
+  // cloth shell from the anatomically intact body legs; preserve skin indices,
+  // skin weights and morph targets so hips/knees articulate with the rig.
+  const source=body.geometry;
+  const position=source.getAttribute('position');
+  const index=source.getIndex();
+  if(!position)return null;
+  source.computeBoundingBox();
+  const box=source.boundingBox;
+  const h=Math.max(.1,box.max.y-box.min.y);
+  const midX=(box.min.x+box.max.x)/2;
+  const midZ=(box.min.z+box.max.z)/2;
+  const lower=box.min.y+.018*h;
+  const upper=box.min.y+.564*h;
+  const xLimit=.315*h, zLimit=.26*h;
+  const order=[];
+  const faces=index?index.count:position.count;
+  for(let k=0;k+2<faces;k+=3){
+    const ids=[k,k+1,k+2].map(i=>index?index.getX(i):i);
+    const x=ids.reduce((sum,i)=>sum+position.getX(i),0)/3;
+    const y=ids.reduce((sum,i)=>sum+position.getY(i),0)/3;
+    const z=ids.reduce((sum,i)=>sum+position.getZ(i),0)/3;
+    if(y>=lower && y<=upper && Math.abs(x-midX)<xLimit && Math.abs(z-midZ)<zLimit){
+      order.push(...ids);
     }
-    positions.needsUpdate=true;
-    geometry.computeBoundingSphere();
   }
+  if(order.length<60){
+    console.warn('Trouser shell geometry is not compatible with body mesh');
+    return null;
+  }
+  const geometry=source.clone();
+  geometry.setIndex(order);
+  geometry.clearGroups();
+  // Expand in the horizontal plane to cover the anatomical mesh without
+  // changing leg length, skeletal weights or waistband height.
+  const vertices=geometry.getAttribute('position');
+  const normal=geometry.getAttribute('normal');
+  if(normal){
+    const spread=.0055*h;
+    for(let i=0;i<vertices.count;i++){
+      const y=vertices.getY(i);
+      if(y<lower-.06*h || y>upper+.06*h)continue;
+      const nx=normal.getX(i),nz=normal.getZ(i);
+      const flat=Math.hypot(nx,nz);
+      if(flat<.1)continue;
+      vertices.setXYZ(i,
+        vertices.getX(i)+spread*nx/flat,
+        y,
+        vertices.getZ(i)+spread*nz/flat);
+    }
+    vertices.needsUpdate=true;
+    geometry.computeVertexNormals();
+  }
+  geometry.computeBoundingSphere();
   const material=new THREE.MeshStandardMaterial({
-    color,side:THREE.DoubleSide,roughness:.91,metalness:0,
-    polygonOffset:true,polygonOffsetFactor:-.5,polygonOffsetUnits:-.5
+    color,side:THREE.DoubleSide,roughness:.9,metalness:0,
+    bumpMap:fabricBump('suit'),bumpScale:.007
   });
-  const liner=new THREE.SkinnedMesh(geometry,material);
-  liner.name='TrouserLiner';
-  liner.position.copy(body.position);
-  liner.quaternion.copy(body.quaternion);
-  liner.scale.copy(body.scale);
-  liner.bindMode=body.bindMode;
-  liner.bind(body.skeleton,body.bindMatrix.clone());
-  liner.castShadow=false;
-  liner.receiveShadow=true;
-  liner.frustumCulled=false;
-  liner.userData.outfitItem='jeans';
-  body.parent.add(liner);
-  return liner;
+  const trousers=new THREE.SkinnedMesh(geometry,material);
+  trousers.name='SeamlessTailoredTrousers';
+  trousers.position.copy(body.position);
+  trousers.quaternion.copy(body.quaternion);
+  trousers.scale.copy(body.scale);
+  trousers.bindMode=body.bindMode;
+  trousers.bind(body.skeleton,body.bindMatrix.clone());
+  trousers.morphTargetDictionary=body.morphTargetDictionary;
+  trousers.morphTargetInfluences=body.morphTargetInfluences;
+  trousers.castShadow=true;trousers.receiveShadow=true;
+  trousers.frustumCulled=false;
+  trousers.userData.outfitItem='jeans';
+  body.parent.add(trousers);
+  return trousers;
 }
 function correctTrouserMesh(mesh){
   // Subtle outward clearance in LOCAL geometry space: never scale the rig,
@@ -248,10 +268,13 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
       prepareBodyMaterials(main,spec.gender);
       hideCoveredBody(body,spec.role);
       if(spec.gender==='male' && spec.clothes.includes('jeans')){
-        const liner=createTrouserLiner(body,wardrobes[state.style][spec.role].jeans);
-        if(liner)state.wardrobeParts.push({mesh:liner,role:spec.role,item:'jeans'});
+        const trousers=createSeamlessTrousers(body,wardrobes[state.style][spec.role].jeans);
+        if(trousers)state.wardrobeParts.push({mesh:trousers,role:spec.role,item:'jeans'});
       }
       for(const item of spec.clothes){
+        // Source jeans GLB is visibly torn. Do not overlay its broken triangles
+        // on top of the seamless skinned trousers.
+        if(item==='jeans' && spec.gender==='male')continue;
         const file=item.startsWith('hair_')?item:'clothing_'+item;
         const group=cloneSkinned(templates[file].scene);
         for(const mesh of allMeshes(group)){
