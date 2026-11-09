@@ -127,14 +127,24 @@ let focusedButtonId=null;
 
 const voiceControls=document.createElement('div');
 voiceControls.className='voice-controls';
-voiceControls.innerHTML='<label for="narratorVoice" id="voiceLabel"></label><select id="narratorVoice"></select><label for="narratorPace" id="paceLabel"></label><select id="narratorPace"><option value="slow"></option><option value="normal"></option><option value="fast"></option></select>';
+voiceControls.innerHTML='<label for="narratorVoice" id="voiceLabel"></label><select id="narratorVoice"></select><label for="narratorTone" id="toneLabel"></label><select id="narratorTone"><option value="welcoming"></option><option value="professional"></option><option value="reassuring"></option><option value="neutral"></option></select><label for="narratorPace" id="paceLabel"></label><select id="narratorPace"><option value="slow"></option><option value="normal"></option><option value="fast"></option></select>';
 $('accessOptions').append(voiceControls);
 const narrator=createNarrator({getLanguage:()=>language,onUnavailable:()=>{$('udlNote').textContent=t().voiceUnsupported}});
 $('narratorPace').value=['slow','normal','fast'].includes(safeStore.get('itsphere-voice-pace','normal'))?safeStore.get('itsphere-voice-pace','normal'):'normal';
 narrator.setPace($('narratorPace').value);
+$('narratorTone').value=['welcoming','professional','reassuring','neutral'].includes(safeStore.get('itsphere-voice-tone','welcoming'))?safeStore.get('itsphere-voice-tone','welcoming'):'welcoming';
+narrator.setTone($('narratorTone').value);
 function populateVoices(){
   const labels=narrator.labels[language];
   $('voiceLabel').textContent=labels.voice;
+  const toneNames={
+    it:['Tono','Accogliente','Professionale','Rassicurante','Neutro'],
+    en:['Tone','Welcoming','Professional','Reassuring','Neutral'],
+    es:['Tono','Acogedor','Profesional','Tranquilizador','Neutro'],
+    fr:['Ton','Accueillant','Professionnel','Rassurant','Neutre']
+  }[language];
+  $('toneLabel').textContent=toneNames[0];
+  [...$('narratorTone').options].forEach((option,i)=>option.textContent=toneNames[i+1]);
   $('paceLabel').textContent=labels.speed;
   const paceLabels=[labels.slow,labels.normal,labels.fast];
   [...$('narratorPace').options].forEach((option,index)=>option.textContent=paceLabels[index]);
@@ -153,6 +163,10 @@ function populateVoices(){
 $('narratorVoice').addEventListener('change',e=>{
   narrator.setVoice(e.target.value);
   safeStore.set('itsphere-voice-'+language,e.target.value);
+});
+$('narratorTone').addEventListener('change',e=>{
+  narrator.setTone(e.target.value);
+  safeStore.set('itsphere-voice-tone',e.target.value);
 });
 $('narratorPace').addEventListener('change',e=>{
   narrator.setPace(e.target.value);
@@ -304,7 +318,7 @@ $('feedbackVoiceBtn').addEventListener('click',()=>{if(lastResult){const d=optio
 $('dialogueVoiceBtn').addEventListener('click',()=>{
   if(!lastResult)return;
   const lines=getDialogue(activeScenario.id,lastResult.id,language);
-  speak(lines.map(x=>x.role+'. '+x.text));
+  speak(lines.map(x=>({text:x.role+'. '+x.text,speaker:x.speaker})));
 });
 $('stopNarrateBtn').addEventListener('click',stopSpeech);
 $('confirmBtn').addEventListener('click',()=>{
