@@ -194,7 +194,7 @@ function translate(){
   $('transcriptNotice').textContent=m.captions+' · '+m.alternative;
   drawCaseSelector();
   const caseContent=caseText();
-  document.querySelector('.eyebrow').textContent=(m.scenario.replace(/\\d+/,'').trim()+' '+String(activeScenario.index).padStart(2,'0'));
+  document.querySelector('.eyebrow').textContent=(m.scenario.replace(/[0-9]+/g,'').trim()+' '+String(activeScenario.index).padStart(2,'0'));
   document.querySelector('.mini-pill').textContent=activeScenario.role;
   document.querySelector('.scenario-panel h1').textContent=caseContent?.title||m.title;
   document.querySelector('.intro').textContent=caseContent?.intro||(settings.simple?m.introSimple:m.intro);
