@@ -8,7 +8,7 @@ const safeStore = {
   get(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch { return fallback; } },
   set(key, value) { try { localStorage.setItem(key,String(value)); } catch {} }
 };
-let language = ['it','en','es'].includes(safeStore.get('itsphere-language','it')) ? safeStore.get('itsphere-language','it') : 'it';
+let language = ['it','en','es','fr'].includes(safeStore.get('itsphere-language','it')) ? safeStore.get('itsphere-language','it') : 'it';
 let attempts = Math.max(0,Number(safeStore.get('itsphere-attempts','0')) || 0);
 let chosen = null;
 let lastResult = null;
@@ -26,7 +26,7 @@ tools.innerHTML = `
   <div class="learning-row">
     <label for="languageSelect" id="languageLabel"></label>
     <select id="languageSelect" aria-label="Choose language">
-      <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option>
+      <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option>
     </select>
     <button type="button" id="narrateBtn" class="tool-btn"></button>
     <button type="button" id="stopNarrateBtn" class="tool-btn"></button>
