@@ -91,3 +91,13 @@ button:focus-visible,a:focus-visible{outline:3px solid #47dfeb;outline-offset:3p
 .high-contrast .wardrobe-bar{background:#000;color:#fff;border-color:#fff}
 .high-contrast .wardrobe-bar select{background:#000;color:#fff;border:2px solid #fff}
 @media(max-width:850px){.wardrobe-bar{flex-wrap:wrap}.wardrobe-bar select{max-width:100%}}
+
+
+/* Scenario catalog: each scenario is a self-contained professional case. */
+.scenario-switch{display:flex;flex-direction:column;gap:6px;padding:13px 14px;margin:0 0 14px;background:#112d40;border:1px solid #477a89;border-radius:12px;}
+.scenario-switch label{font-size:12px;font-weight:750;color:#d3edf2;}
+.scenario-switch select{width:100%;min-height:43px;padding:10px 12px;background:#092333;color:#f2fcff;border:1px solid #7ab5c2;border-radius:9px;font:inherit;font-size:13px;}
+.scenario-switch p{margin:0;font-size:10px;letter-spacing:.02em;color:#a9ccd6;}
+.high-contrast .scenario-switch{background:#000;border-color:#fff;}
+.high-contrast .scenario-switch select{background:#000;border-color:#fff;color:#fff;}
+.large-text .scenario-switch label,.large-text .scenario-switch select{font-size:16px;}
