@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export function createHotelScene(container) {
   const scene = new THREE.Scene();
@@ -77,21 +78,33 @@ export function createHotelScene(container) {
       const a=n*Math.PI*2/7;sphere(x+Math.cos(a)*.5,1.55+(n%3)*.12,z+Math.sin(a)*.5,.33,green);
     }
   }
-  // Stylized receptionist and guest for training interactions.
-  function person(x,z,coat,angle=0){
-    const group=new THREE.Group();group.position.set(x,0,z);group.rotation.y=angle;scene.add(group);
-    const suit=mat(coat),skin=mat('#c9906d'),hair=mat('#241915');
-    const body=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.72,4,12),suit);body.position.y=1.18;group.add(body);
-    const head=new THREE.Mesh(new THREE.SphereGeometry(.235,18,14),skin);head.position.y=1.94;group.add(head);
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(.24,18,12),hair);cap.scale.y=.52;cap.position.y=2.075;group.add(cap);
-    for(const s of [-1,1]){
-      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.13,.14,.86,12),suit);leg.position.set(.18*s,.45,0);group.add(leg);
-      const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.6,4,9),suit);arm.position.set(.44*s,1.21,0);arm.rotation.z=-.15*s;group.add(arm);
+  // Replace previous capsule-shaped figures with textured, rigged GLB characters.
+  // CesiumMan is a temporary reference avatar (CC BY 4.0), not a photorealistic person.
+  // Future production models should be distinct licensed characters for staff and guest.
+  const characterRoots = [];
+  const loader = new GLTFLoader();
+  loader.load(import.meta.env.BASE_URL + 'models/guest.glb', (gltf) => {
+    if (disposed) return;
+    const base = gltf.scene;
+    base.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(base);
+    const height = Math.max(bb.max.y-bb.min.y, 0.01);
+    const scale = 1.78/height;
+    function avatar(x,z,angle,factor){
+      const clone = base.clone(true);
+      clone.scale.setScalar(scale*factor);
+      clone.rotation.y=angle;
+      clone.updateMatrixWorld(true);
+      const bounds=new THREE.Box3().setFromObject(clone);
+      clone.position.set(x,-bounds.min.y,z);
+      scene.add(clone);characterRoots.push(clone);
     }
-  }
-  person(1.8,-7,'#24395b');
-  person(2.4,-3.15,'#1a283e',Math.PI);
-  box(3,.48,-3.2,.52,.9,.38,dark);
+    avatar(2.4,-3.15,Math.PI,1);
+    avatar(1.8,-7,0,.96);
+  }, undefined, (err)=>{
+    console.error('Unable to load GLB character', err);
+    // The training scenario remains available even if the 3D avatar fails.
+  });
   // Warm ceiling rings and ambient lights.
   scene.add(new THREE.HemisphereLight(0xc6e3f2,0x53432d,2.5));
   const sunlight=new THREE.DirectionalLight(0xffdfb2,3.4);
