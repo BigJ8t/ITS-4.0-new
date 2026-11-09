@@ -144,7 +144,7 @@ function prepareBodyMaterials(main,gender){
   });
 }
 export function installHumanCharacters(scene,isDisposed=()=>false){
-  const state={mixers:[],roots:[],wardrobeParts:[],status:'loading',motion:true,style:'signature'};
+  const state={mixers:[],roots:[],extras:[],wardrobeParts:[],status:'loading',motion:true,style:'signature',scenario:'vip'};
   const loader=new GLTFLoader();
   const needed=['base_body_anim',...new Set(people.flatMap(p=>p.clothes.map(c=>c.startsWith('hair_')?c:'clothing_'+c)))];
   const templates={};
@@ -175,6 +175,7 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
           body.parent.add(mesh);
           genderMorph(mesh,spec.gender);
           toneClothing(mesh,wardrobes[state.style][spec.role][item],item);
+          mesh.userData.outfitItem=item;
           state.wardrobeParts.push({mesh,role:spec.role,item});
         }
       }
@@ -217,12 +218,68 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
         }
       }
     }
+    // Additional visitors come from already-loaded, licensed rigged characters.
+    // They are reused across scenarios rather than downloaded multiple times.
+    const locations=[
+      [-1.28,-2.30,.94,.26],[-.26,-1.61,.97,-.16],
+      [.86,-.84,1.02,-.12],[1.86,.18,.96,.1]
+    ];
+    for(let i=0;i<locations.length;i++){
+      const source=state.roots[i%2===0?1:0];
+      if(!source)continue;
+      const actor=cloneSkinned(source);
+      actor.traverse(mesh=>{
+        if(!mesh.isMesh)return;
+        const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+        const copies=original.map(m=>m.clone());
+        mesh.material=Array.isArray(mesh.material)?copies:copies[0];
+        const item=mesh.userData.outfitItem;
+        if(item){
+          const tint= i%2===0
+            ? {shirt:'#eee5d9',jacket:'#384b5c',jeans:'#50535b',shoes:'#342c29',hair_short04:'#3b2b20'}[item]
+            : {shirt:'#e9e2cf',jacket:'#736257',skirt:'#61534f',shoes:'#2f2a25',hair_ponytail01:'#47372c'}[item];
+          if(tint)copies.forEach(m=>m.color?.set(tint));
+        }
+        mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;
+      });
+      const [x,z,factor,angle]=locations[i];
+      actor.scale.multiplyScalar(factor);
+      actor.position.set(x,source.position.y,z);
+      actor.rotation.y=angle;
+      actor.visible=false;
+      scene.add(actor);
+      state.extras.push(actor);
+      state.roots.push(actor);
+    }
+    applyScenarioPeople();
     state.status='ready';
   }).catch(err=>{
     state.status='failed';
     console.error('Could not load licensed MakeHuman avatars. Scenario remains usable.',err);
   });
+  function applyScenarioPeople(){
+    const mode=state.scenario;
+    const [staff,guest]=state.roots;
+    if(staff)staff.visible=true;
+    if(guest)guest.visible=mode!=='revenue';
+    const count=mode==='hall'||mode==='overbooking'?4:mode==='concierge'?2:0;
+    state.extras.forEach((actor,index)=>{
+      actor.visible=index<count;
+      if(!actor.visible)return;
+      if(mode==='overbooking'){
+        const spots=[[-1.4,-2.0],[-.3,-1.4],[.8,-.7],[1.95,.15]];
+        actor.position.x=spots[index][0];actor.position.z=spots[index][1];
+      }else if(mode==='concierge'){
+        const spots=[[-2.25,-2.35],[-.45,-1.9]];
+        actor.position.x=spots[index]?.[0]??0;actor.position.z=spots[index]?.[1]??0;
+      }else{
+        const spots=[[-1.25,-2.65],[-.35,-2.0],[.7,-1.25],[1.8,-.5]];
+        actor.position.x=spots[index][0];actor.position.z=spots[index][1];
+      }
+    });
+  }
   return {
+    setScenario(id){state.scenario=id;applyScenarioPeople()},
     update(dt){if(state.motion)state.mixers.forEach(m=>m.update(dt))},
     setReducedMotion(v){state.motion=!v},
     getStatus(){return state.status},
