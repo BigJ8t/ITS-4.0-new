@@ -98,6 +98,11 @@ function showHint(force=false){
 function translate(){
   document.documentElement.lang=language;const m=t();
   $('languageSelect').value=language;
+  $('helpTitle').textContent=m.helpTitle;
+  document.querySelector('#helpModal .modal-card > p:not(.muted)').textContent=m.helpBody;
+  document.querySelector('#helpModal .modal-card > p.muted').textContent=m.helpFoot;
+  $('startBtn').textContent=m.start;
+  document.querySelector('.subtag').textContent=m.header3d;
   $('languageLabel').textContent=m.language;
   $('narrateBtn').textContent='▶ '+m.voice;
   $('stopNarrateBtn').textContent='■ '+m.stop;
