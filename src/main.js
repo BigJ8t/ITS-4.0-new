@@ -16,6 +16,17 @@ let settings = { large:false, contrast:false, motion:false, simple:false, guided
 let spoken = false;
 const t = () => messages[language];
 const hotel = createHotelScene($('scene'));
+// Directed views let students inspect the two characters without requiring
+// joystick movement, while preserving free exploration and keyboard access.
+const cameraBar=document.createElement('nav');
+cameraBar.className='camera-toolbar';
+cameraBar.setAttribute('aria-label','Viste della simulazione');
+cameraBar.innerHTML='<button type="button" class="tool-btn" data-view="overview">◈ Panoramica</button><button type="button" class="tool-btn" data-view="guest">◉ Ospite</button><button type="button" class="tool-btn" data-view="reception">⌂ Reception</button>';
+document.querySelector('.workspace').append(cameraBar);
+cameraBar.querySelectorAll('button').forEach(button=>{
+  button.addEventListener('click',()=>hotel.setView(button.dataset.view));
+});
+
 
 // UDL controls: multiple languages, visible transcript, adjustable typography, contrast,
 // reduced motion, reading support, and non-3D equivalent text interaction.
@@ -98,6 +109,9 @@ function showHint(force=false){
 function translate(){
   document.documentElement.lang=language;const m=t();
   $('languageSelect').value=language;
+  cameraBar.setAttribute('aria-label',({it:'Inquadrature',en:'Camera views',es:'Vistas de cámara',fr:'Vues de caméra'})[language]);
+  const cameras=({it:['Panoramica','Ospite','Reception'],en:['Overview','Guest','Front desk'],es:['Vista general','Huésped','Recepción'],fr:['Vue générale','Client','Réception']})[language];
+  cameraBar.querySelectorAll('button').forEach((btn,i)=>btn.textContent=['◈ ','◉ ','⌂ '][i]+cameras[i]);
   $('helpTitle').textContent=m.helpTitle;
   document.querySelector('#helpModal .modal-card > p:not(.muted)').textContent=m.helpBody;
   document.querySelector('#helpModal .modal-card > p.muted').textContent=m.helpFoot;
@@ -162,12 +176,13 @@ $('stopNarrateBtn').addEventListener('click',stopSpeech);
 $('confirmBtn').addEventListener('click',()=>{
   const result=scenario.choices.find(c=>c.id===chosen);if(!result)return;
   attempts++;safeStore.set('itsphere-attempts',attempts);
+  hotel.reactToChoice?.(result.id);
   renderResult(result);$('decisionArea').classList.add('hidden');$('resultArea').classList.remove('hidden');
   $('trialCounter').textContent=t().attempts+': '+attempts;
   $('resultTitle').setAttribute('tabindex','-1');$('resultTitle').focus();
 });
 $('retryBtn').addEventListener('click',()=>{
-  stopSpeech();lastResult=null;chosen=null;$('confirmBtn').disabled=true;
+  stopSpeech();hotel.setView?.('overview');lastResult=null;chosen=null;$('confirmBtn').disabled=true;
   $('resultArea').classList.add('hidden');$('decisionArea').classList.remove('hidden');
   renderChoices();showHint();$('choices').querySelector('button')?.focus();
 });
