@@ -18,6 +18,11 @@ const t = () => messages[language];
 const hotel = createHotelScene($('scene'));
 // Directed views let students inspect the two characters without requiring
 // joystick movement, while preserving free exploration and keyboard access.
+const wardrobeBar=document.createElement('div');
+wardrobeBar.className='wardrobe-bar';
+wardrobeBar.innerHTML='<label for="wardrobeSelect" id="wardrobeLabel"></label><select id="wardrobeSelect" aria-label="Character wardrobe style"><option value="signature"></option><option value="heritage"></option></select>';
+document.querySelector('.scenario-panel').insertBefore(wardrobeBar,document.querySelector('.scenario-panel .panel-top'));
+wardrobeBar.querySelector('select').addEventListener('change',e=>hotel.setCharacterStyle(e.target.value));
 const cameraBar=document.createElement('nav');
 cameraBar.className='camera-toolbar';
 cameraBar.setAttribute('aria-label','Viste della simulazione');
@@ -108,6 +113,14 @@ function showHint(force=false){
 }
 function translate(){
   document.documentElement.lang=language;const m=t();
+  const labels=({
+    it:['Abiti dei personaggi','Professionale blu','Heritage sabbia'],
+    en:['Character outfits','Navy professional','Heritage sand'],
+    es:['Vestuario de personajes','Profesional azul','Heritage arena'],
+    fr:['Tenues des personnages','Professionnel bleu','Héritage sable']
+  })[language];
+  $('wardrobeLabel').textContent=labels[0];
+  [...$('wardrobeSelect').options].forEach((option,i)=>option.textContent=labels[i+1]);
   $('languageSelect').value=language;
   cameraBar.setAttribute('aria-label',({it:'Inquadrature',en:'Camera views',es:'Vistas de cámara',fr:'Vues de caméra'})[language]);
   const cameras=({it:['Panoramica','Ospite','Reception'],en:['Overview','Guest','Front desk'],es:['Vista general','Huésped','Recepción'],fr:['Vue générale','Client','Réception']})[language];
