@@ -48,6 +48,30 @@ export const messages = {
     negotiate:['Negotiate a wait with a benefit','Assertive communication · negotiation','A clear commitment reduces uncertainty','Explain the situation without passing blame, agree on an update, and offer a proportionate gesture of care.','Transparency helps only when promises are realistic. What if the room is still unavailable?'],
     metricNames:['Guest satisfaction','Cost impact','Operational efficiency'],points:'pts'
   },
+  fr: {
+    helpTitle:'Explorez Spazio Origine',helpBody:'Utilisez les touches WASD ou les flèches pour vous déplacer dans le hall. Faites glisser pour tourner la caméra et utilisez la molette pour zoomer. La simulation reste entièrement accessible depuis le panneau de texte.',helpFoot:"Prototype basé sur des règles. L’IA générative et les données ouvertes ne sont pas encore intégrées.",start:'Commencer la simulation',header3d:'Simulation 3D',
+    language:'Langue',voice:'Écouter le scénario',stop:'Arrêter la voix',captions:'Transcription disponible',
+    accessibility:'Accessibilité',large:'Grand texte',contrast:'Contraste élevé',motion:'Réduire les animations',
+    simple:'Langage simplifié',help:'Aide / indice',hints:'Accompagnement adaptatif',
+    level:'Parcours',beginner:'Guidé',standard:'Autonome',advanced:'Expert',
+    badge:'SIMULATION PROFESSIONNELLE',scenario:'SCÉNARIO 01',role:'RÉCEPTION',
+    title:'Client VIP',intro:"La chambre réservée n’est pas prête. Le client attend à la réception de Spazio Origine et commence à s’impatienter.",
+    introSimple:"Un client arrive. Sa chambre n’est pas prête. Il s’impatiente.",
+    problem:"L’hôtel est presque complet et le responsable est occupé. Comment gérez-vous la situation ?",
+    problemSimple:"Vous avez peu de temps. Choisissez quoi dire et quoi faire.",
+    question:'Choisissez une stratégie',confirm:'Confirmer mon choix',retry:'Essayer une autre décision',
+    score:'EFFETS SIMULÉS',coach:'Débriefing pédagogique',attempts:'Tentatives',mode:'Démo pédagogique · règles explicites',
+    helper:"Tenez compte des besoins du client, des ressources disponibles et des coûts. Il n’existe pas de réponse idéale dans toutes les situations.",
+    nextHint:"Évaluez l’équilibre entre satisfaction, coûts et délais. Réessayez pour comparer les résultats.",
+    stepHint:"Écoutez le besoin, vérifiez la disponibilité, puis proposez une action concrète.",
+    readFeedback:'Écouter le retour',voiceUnsupported:"La lecture vocale n’est pas disponible dans ce navigateur.",
+    effects:'Scores illustratifs : ils ne mesurent pas les compétences réelles.',notice:"La narration utilise la synthèse vocale du navigateur, et non une IA générative.",
+    alternative:'Mode texte : vous pouvez terminer le scénario sans naviguer dans la scène 3D.',
+    upgrade:['Proposer immédiatement une chambre supérieure','Solution rapide · coût élevé',"Le client apprécie la solution, mais la marge diminue","Vous proposez une chambre de catégorie supérieure. La satisfaction peut s’améliorer, mais cette solution a un coût et nécessite de vérifier les disponibilités et les règles de l’établissement.","Avant de proposer une solution coûteuse, vérifiez la disponibilité et les autorisations. Quelles informations vous manquaient ?"],
+    alternativeChoice:['Proposer un service pendant l’attente','Gestion de l’attente · compromis',"L’attente devient une occasion de rendre service","Vous reconnaissez le désagrément, proposez un service pendant l’attente, contactez l’équipe d’entretien et annoncez un délai réaliste.","Fixez l’heure du prochain point d’information et vérifiez l’état de la chambre."],
+    negotiate:['Négocier une attente avec un avantage','Communication assertive · négociation',"Un engagement clair réduit l’incertitude","Vous expliquez la situation sans rejeter la faute sur autrui, convenez d’un prochain point d’information et proposez une attention proportionnée.","La transparence n’est utile que si la promesse est réaliste. Que feriez-vous si la chambre était toujours indisponible ?"],
+    metricNames:['Satisfaction du client','Impact sur les coûts','Efficacité opérationnelle'],points:'points'
+  },
   es: {
     helpTitle:'Explora Spazio Origine',helpBody:'Usa WASD o las flechas para recorrer el vestíbulo. Arrastra para girar y desplaza la rueda para acercar. Puedes completar la simulación desde el panel de texto.',helpFoot:'Prototipo basado en reglas. La IA generativa y los datos abiertos aún no están integrados.',start:'Iniciar simulación',header3d:'Simulación 3D',
     language:'Idioma',voice:'Escuchar escenario',stop:'Detener voz',captions:'Transcripción disponible',
@@ -73,4 +97,4 @@ export const messages = {
     metricNames:['Satisfacción del huésped','Impacto en costes','Eficiencia operativa'],points:'pts'
   }
 };
-export const languageCodes={it:'it-IT',en:'en-US',es:'es-ES'};
+export const languageCodes={it:'it-IT',en:'en-US',es:'es-ES',fr:'fr-FR'};
