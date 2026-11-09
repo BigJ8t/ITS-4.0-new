@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1728" />
+  <meta name="description" content="ITSphere: ambiente 3D interattivo per simulare decisioni professionali nel turismo, ambientato nella reception Spazio Origine." />
+  <title>ITSphere | Spazio Origine — Simulazione 3D</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="ITSphere - home"><span class="brand-mark">◈</span><span>IT<span class="accent">Sphere</span></span></a>
+      <div class="center-title"><span class="status-dot"></span> <span>Spazio Origine</span><span class="subtag">Simulazione 3D</span></div>
+      <button id="helpBtn" class="icon-btn" aria-label="Istruzioni di navigazione" title="Istruzioni">?</button>
+    </header>
+    <main class="workspace">
+      <div id="scene" role="img" aria-label="Ambiente tridimensionale esplorabile della reception Spazio Origine"></div>
+      <div class="scene-tag"><span class="status-dot"></span> AMBIENTE 3D · CONCEPT INTERATTIVO</div>
+      <div class="nav-help" aria-hidden="true"><span class="key">W</span><div><span class="key">A</span><span class="key">S</span><span class="key">D</span></div><small>Muoviti · trascina per ruotare · rotella per zoom</small></div>
+      <aside class="scenario-panel" aria-label="Pannello scenario interattivo">
+        <div class="panel-top"><span class="eyebrow">SCENARIO 01</span><span class="mini-pill">FRONT OFFICE</span></div>
+        <h1>Ospite VIP</h1>
+        <p class="intro">La camera prenotata non è pronta. L'ospite attende alla reception di <strong>Spazio Origine</strong> e manifesta impazienza.</p>
+        <div class="problem-box"><span class="problem-icon">!</span><span>La struttura è quasi al completo e il responsabile è occupato. Come gestisci la situazione?</span></div>
+        <div id="decisionArea"><p class="question">Scegli una strategia</p><div id="choices" class="choices"></div><button id="confirmBtn" class="primary" disabled>Conferma la tua scelta <span>→</span></button></div>
+        <section id="resultArea" class="result hidden" aria-live="polite"><div id="resultTag" class="result-tag"></div><h2 id="resultTitle"></h2><p id="resultBody"></p><div class="metrics-title">EFFETTI SIMULATI</div><div id="metrics" class="metrics"></div><div class="coach-note"><strong>Debriefing</strong><p id="coachText"></p></div><button id="retryBtn" class="primary">Prova un'altra decisione ↺</button></section>
+        <div class="footer-panel"><span>Modalità demo didattica</span><span id="trialCounter">Tentativi: 0</span></div>
+      </aside>
+      <div id="toast" class="toast hidden" role="status"></div>
+    </main>
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button id="closeHelp" class="close-btn" aria-label="Chiudi">×</button><h2 id="helpTitle">Esplora Spazio Origine</h2><p>Usa <strong>W A S D</strong> o le frecce per spostarti nella lobby 3D. Trascina con il mouse per ruotare la visuale e usa la rotella per lo zoom. Da telefono, trascina con il dito per esplorare.</p><p>Leggi lo scenario, scegli una risposta e osserva gli effetti simulati sulla soddisfazione, sui costi e sulla gestione operativa.</p><p class="muted">Questo è un prototipo illustrativo con regole decisionali esplicite. Non utilizza ancora un motore AI adattivo né dati PwC/Open Data integrati.</p><button id="startBtn" class="primary">Inizia la simulazione</button></div></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
