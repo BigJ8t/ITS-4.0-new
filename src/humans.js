@@ -50,7 +50,10 @@ function hideCoveredBody(mesh,role){
   if(!zones||!index)return;
   // MakeHuman CCZONE: feet=1, legs=2, hips=4, torso=8, coat=16,
   // shirt=512, jacket=4096. Keep visible head, neck, hands.
-  const cover=(1|2|4|8|16|512|4096);
+  // For male guests keep the full underlying legs and feet. Removing them
+  // previously produced visible empty holes whenever skinned trousers moved.
+  // Jacket/shirt-covered torso zones can still be removed safely.
+  const cover=role==='guest' ? (8|16|512|4096) : (1|2|4|8|16|512|4096);
   const original=index.array;
   const filtered=[];
   for(let i=0;i<original.length;i+=3){
@@ -107,6 +110,12 @@ function dressMaterial(source,part,color){
     m.bumpMap=fabricBump(part==='shirt'?'shirt':'suit');
     m.bumpScale=part==='shirt'?.009:.018;
   }
+  if(part==='jeans'){
+    // GLB textile meshes can include inward-facing triangles: two-sided
+    // rendering closes visual gaps without fabricating new geometry.
+    m.side=THREE.DoubleSide;
+    m.roughness=.87;
+  }
   m.envMapIntensity=.42;
   m.needsUpdate=true;
   return m;
@@ -119,6 +128,27 @@ function toneClothing(root,color,item){
       :dressMaterial(obj.material,item,color);
     obj.castShadow=true;obj.receiveShadow=true;obj.frustumCulled=false;
   });
+}
+function correctTrouserMesh(mesh){
+  // Subtle outward clearance in LOCAL geometry space: never scale the rig,
+  // reposition its skeleton, or pull cuffs down independently.
+  // Work on a private geometry copy (bindPart already creates one).
+  const geometry=mesh.geometry;
+  const positions=geometry.getAttribute('position');
+  const normals=geometry.getAttribute('normal');
+  if(!positions||!normals)return;
+  const clearance=.0035;
+  for(let i=0;i<positions.count;i++){
+    const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i);
+    // No Y normal displacement: avoids opening waistband and ankle seams.
+    const nx=normals.getX(i),nz=normals.getZ(i);
+    const horizontal=Math.hypot(nx,nz);
+    if(horizontal<.0001)continue;
+    positions.setXYZ(i,x+clearance*nx/horizontal,y,z+clearance*nz/horizontal);
+  }
+  positions.needsUpdate=true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
 }
 function prepareBodyMaterials(main,gender){
   // Clone face/skin materials per character: changes must never leak to the
@@ -172,6 +202,7 @@ export function installHumanCharacters(scene,isDisposed=()=>false){
           mesh.quaternion.copy(body.quaternion);
           mesh.scale.copy(body.scale);
           if(!bindPart(mesh,body))continue;
+          if(spec.gender==='male' && item==='jeans')correctTrouserMesh(mesh);
           body.parent.add(mesh);
           genderMorph(mesh,spec.gender);
           toneClothing(mesh,wardrobes[state.style][spec.role][item],item);
